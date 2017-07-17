@@ -3,8 +3,8 @@
 #include <math.h>
 #include <string.h>
 #include <gmp.h>
-#include </home/elmagnifico/pbc-0.5.14/include/pbc.h>
-#include </home/elmagnifico/pbc-0.5.14/include/pbc_test.h>
+#include "../../pbc-0.5.14/include/pbc.h"
+#include "../../pbc-0.5.14/include/pbc_test.h"
 
 /*****************************************
  * gcc test.c -L. -lpbc -lgmp -lm -o test 
