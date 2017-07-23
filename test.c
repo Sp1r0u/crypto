@@ -19,7 +19,7 @@ struct curve_params {
   pairing_t pairing;
 };
 
-void set_params( struct curve_params* );
+void set_curve_params( struct curve_params* );
 void init_pairing( struct curve_params* );
 void get_rnd_element_of_Fp( element_t*, struct curve_params* );
 void get_rnd_element_of_G1( element_t*, struct curve_params* );
@@ -37,7 +37,7 @@ int main( int argc, char **argv ) {
 
   struct curve_params BN; 
 
-  set_params( &BN );
+  set_curve_params( &BN );
   
   init_pairing( &BN );
 
@@ -133,7 +133,7 @@ void init_pairing( struct curve_params* c ) {
 //================================================
 //================================================
 
-void set_params( struct curve_params* c ) {
+void set_curve_params( struct curve_params* c ) {
   const char * foo;
   mpz_init( c->x );
   mpz_init( c->tx );
@@ -193,13 +193,13 @@ void set_params( struct curve_params* c ) {
 //================================================
 //================================================
 
-void set_params_bak( struct curve_params* c ) {
+void set_curve_params_bak( struct curve_params* c ) {
   /* x  = - ( 2^62 + 2^55 + 1 )
      tx = 6*x^2  + 1 
      px = 36*x^4 + 36*x^3 + 24*x^2 + 6*x + 1
      nx = 36*x^4 + 36*x^3 + 18*x^2 + 6*x + 1
    */
-  printf("--- calling set_params ---\n");
+  printf("--- calling set_curve_params ---\n");
   const char * const foo = "4647714815446351873"; //( pow(2, 62) + pow(2, 55) + 1 );
   mpz_init( c->x );
   mpz_init( c->tx );
