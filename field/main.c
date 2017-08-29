@@ -28,18 +28,19 @@ int main( int argc, char **argv ) {
     exit(0);
   }
 
-  /* p: monic polynomial */
+  /* p: monic polynomials */
   struct element_t *p = malloc( sizeof( struct element_t ));
-  generate_random_monic_polynomial( &Fp, p, 3, state );
+  generate_random_monic_polynomial( &Fp, p, 2, state );
   print_element( p );
 
   struct element_t *q = malloc( sizeof( struct element_t ));
-  generate_random_monic_polynomial( &Fp, q, 4, state );
+  generate_random_monic_polynomial( &Fp, q, 3, state );
   print_element( q );
 
   struct element_t *r = malloc( sizeof( struct element_t ));
   multiply_elements( p, q, r );
-  
+  print_element( r );
+  //add_elements( p, q, r );
   //is_poly_irreducible( p );
   
   /* Fp2: quadratic extension of Fp */
@@ -52,6 +53,8 @@ int main( int argc, char **argv ) {
   /* freeing memory */
   gmp_randclear( state );
   free( p );
+  free( q );
+  free( r );
   
   return 0;
 }
