@@ -56,7 +56,7 @@ raw_input('\nPress enter to continue\n')
 #          build QAP(t(x), V(x), W(x), Y(x)
 #          construct Common Reference String CRS
 
-imgAdd = '/home/elmagnifico/crypto/sage/drawing_zkSNARK.png'
+imgAdd = '/home/elmagnifico/crypto/sage/circuit.png'
 img = Image.open(imgAdd)
 img.show()
 
