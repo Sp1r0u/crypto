@@ -85,7 +85,7 @@ def get_text_from_binary( b ):
 #################################
 
 if __name__ == '__main__':
-    #message = 'Bonjour ema'
+    #message = 'BonjourEma'
     message = 'kts'
     binary_message    = convert_message_to_bits( message )
     encryption_key    = generate_random_key( len( binary_message ) )
