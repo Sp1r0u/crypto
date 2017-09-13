@@ -1,442 +1,125 @@
 ######################################
 # 
 
-def verif(E, CRS, PoC, P):
+def verif(E, VerifK, Proof, IO):
+
+    c0 = IO[0]
+    c1 = IO[1]
+    c2 = IO[2]
+    c3 = IO[3]
+    c4 = IO[4]
+    c7 = IO[5]
+
+    ###print c0, c1, c2, c3, c4, c7
+
     Fp = E.base_field()
-    #print 'Fp',Fp
+    Fp = Fp.base()
+    ###print 'Fp',Fp
 
-    VP   = PoC['V*P']
-    WQ   = PoC['W*Q']
-
-    n    = VP.order()
-    p    = Fp.order()
-    k    = GF(n)(p).multiplicative_order()
-
-    ans1 = VP.tate_pairing(WQ, n, k)
-
-    YP   = PoC['Y*P']
-    Q    = CRS['Q']
-
-    ans2 = YP.tate_pairing(Q, n, k)
-
-    TP   = CRS['t(s)P']
-    HQ   = PoC['h(s)*Q']
-
-    ans3 = TP.tate_pairing(HQ, n, k)
-
-    print 'ans1:',ans1
-    print 'ans2*ans3:',ans2*ans3
-
-    print 'ans1/ans2:',ans1/ans2
-    print 'ans3:',ans3
-
-    TQ   = CRS['t(s)Q']
-    HP   = PoC['h(s)*P']
-
-    ans3 = HP.tate_pairing(TQ, n, k)
-
-    print 'ans1:',ans1
-    print 'ans2*ans3:',ans2*ans3
-
-    exit()
-
-    #V = int(PoC['V*P']%Fp.order())
-    #print 'V:',V, type(V)
-    #W = int(PoC['W*Q']%Fp.order())
-    #print 'W:',W, type(W)
-    #VW = (V*W)%Fp.order()
-    #print 'V*W:', VW
-
-    #Y = PoC['Y*P']%Fp.order()
-    #print 'Y:',Y, type(W)
-
-    #T = CRS['t(s)P']%Fp.order()
-    #print 'T:',T, type(T)
-    #H = PoC['h(s)*Q']%Fp.order()
-    #print 'H:',H, type(H)
-    #YTH = (Y+T*H)%Fp.order()
-
-    #print 'Y+T*H:',YTH
-   
-    #print '##############################################'
-
-    VWP  = VW*CRS['P']
-    n    = VWP.order()
-    p    = Fp.order()
-    print 'VWP.order():',n
-    print 'Fp.order() :',p
-    k    = GF(n)(p).multiplicative_order()
-    e    = Integer((p^k-1)/n)
-    ans1 = VWP.tate_pairing(CRS['Q'], n, k)
-    print 'ans1:',ans1, ans1^n
-    ans1a = VWP._miller_(CRS['Q'],n)
-    VP    = (V%Fp.order())*CRS['P']
-    WQ    = (W%Fp.order())*CRS['Q']
-    ans1b = VP._miller_(WQ,n)
-    print 'ans1(miller fn):', ans1a, ans1b
-    print 'e:',e
-    print 'ans1^e(tate):',ans1a^e, ans1b^(e) #ans12b^e
-
-    S = E.random_point()
-    S = EK(S)
-    Q = CRS['Q']
-    dummy1 = VP._miller_(WQ+S,n)
-    dummy2 = VP._miller_(S,n)
-    print 'S:',S
-    print 'dummy1:',dummy1
-    print 'dummy2:',dummy2    
-    print 'result:',(dummy1/dummy2)^e
-    dummy1 = VWP._miller_(Q+S,n)
-    dummy2 = VWP._miller_(S,n)
-    print 'dummy1:',dummy1
-    print 'dummy2:',dummy2    
-    print 'result:',(dummy1/dummy2)^e
-
-    print 'VWP:',VWP
-    print 'VWP:',Integer(PoC['V*P']*PoC['W*Q'])*CRS['P']
-    print 'VWP:',(Integer(PoC['V*P']*PoC['W*Q'])%Fp.order())*CRS['P']
-    print 'VWP:',Integer(PoC['V*P']*PoC['W*Q'])
-    #for i in range (Integer(PoC['V*P']*PoC['W*Q'])): print i*CRS['P']
-
-    YTHP = YTH*CRS['P']
-    ans2 = YTHP.tate_pairing(CRS['Q'], n, k)
-    print 'ans2:',ans2, ans2^n, YTHP._miller_(CRS['Q'],n)^e
-
-    VP   = (V%Fp.order())*CRS['P']
-    WQ   = (W%Fp.order())*CRS['Q']
-    ans3 = VP.tate_pairing(WQ, n, k)
-    ###ans31 = WQ.tate_pairing(VP, n, k)
-    print 'ans3:',ans3, ans3^n, VP in G1_EK, WQ in G2, VP._miller_(WQ,n)^e
-    print 'ans31:',ans31
-    print 'ans3/ans31:',ans3/ans31
-
-    P     = CRS['P']
-    Q     = CRS['Q']
-    ans4  = P.tate_pairing(CRS['Q'], n, k)
-    ans41 = pow(ans4,(VW)%p)
-    ans42 = pow(ans4,VW)
-    ###print 'ans4:',ans4, ans4^n
-    print 'ans41:',ans41, ans41^n
-    print 'ans42:',ans42, ans42^n 
-
-    ans51 = P.tate_pairing(W*Q, n, k)
-    ans52 = (W*CRS['P']).tate_pairing(CRS['Q'], n, k)
-    print 'ans51:',ans51,'ans52:',ans52
-
-    ans51 = P.tate_pairing(V*Q, n, k)
-    ans52 = (V*CRS['P']).tate_pairing(CRS['Q'], n, k)
-    print 'ans51:',ans51,'ans52:',ans52
-
-    ans51 = (V*W*P).tate_pairing(Q, n, k)
-    ans52 = P.tate_pairing(V*W*Q, n, k)
-    print 'ans51:',ans51,'ans52:',ans52
-
-    ans51 = (((V*W)%Fp.order())*P).tate_pairing(Q, n, k)
-    ans52 = P.tate_pairing(((V*W)%Fp.order())*Q, n, k)
-    print 'ans51:',ans51,'ans52:',ans52
-
-
-    pause
-
-    print 'P:',P, type(P), CRS['P'], type(CRS['P'])
-    print 'V:',V, PoC['V*P']
-    print '130*P:',130*E(P)
-    print '12368*P:',12368*E(P)
-    V1 = V*CRS['P']
-    print 'V1:',V1
-    V2 = int((PoC['V*P']%Fp.order()))*CRS['P']
-    print 'V2:',V2
-    V3 = PoC['V*P']*CRS['P']
-    print 'V3:',V3
-    V4 = int(PoC['V*P'])*CRS['P']
-    print 'V4:',V4
-    pause
-    ####W = int((PoC['W*Q']%Fp.order()))#*CRS['Q']
-    ####print 'V:',V, V in G1_EK
-    ####print 'W:',W, W in G2
-    ###V = int(PoC['V*P'])*CRS['P']
-    ####W = int(PoC['W*Q'])#*CRS['Q']
-    ###print 'V:',V, V in G1_EK
-    ###print 'W:',W, W in G2
-    ###print 'type(CRS[P]):',type(CRS['P']), CRS['P'], CRS['P'].order()
-    ###print '-----', 134*CRS['P']
-    print '@@@@@', 53*CRS['P']
-    print '%%%%%', (134+pow(53,4))*CRS['P']
-    ###for i in range(50):
-    ###	print 'i:',i,2+i*53,(2+i*53*53)*CRS['P']
-    pause
-    n = V.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo1 = V.tate_pairing(W, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(V*P,W*Q):',foo1
-    
-    T = CRS['t(s)P']*CRS['P']
-    H = PoC['h(s)*Q']*CRS['Q']
-    n = T.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo2 = T.tate_pairing(H, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(T*P,H*Q):',foo2
-
-    H = PoC['h(s)*P']*CRS['P']
-    T = CRS['t(s)P']*CRS['Q']
-    n = H.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo2 = H.tate_pairing(T, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(H*P,T*Q):',foo2
-
-    Y = PoC['Y*P']*CRS['P']
-    Q = CRS['Q']
-    n = Y.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo3 = Y.tate_pairing(Q, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(Y*P,Q):',foo3
-
-    P = CRS['P']
+    P = VerifK['P']
     n = P.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo4 = P.tate_pairing(Q, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(P,Q):',foo4
-    V = int(PoC['V*P'])
-    W = int(PoC['W*Q'])
-    Y = int(PoC['Y*P'])
-    T = int(CRS['t(s)P'])
-    H = int(PoC['h(s)*P'])
-    print 'V:',V,'W:',W,'Y:',Y,'T:',T,'H:',T
-    dummy1 = V*W
-    dummy2 = Y+T*H
-    print 'e(P,Q)^(dummy1):',pow(foo4,dummy1)
-    print 'e(P,Q)^(dummy2):',pow(foo4,dummy2)
-    print 'dummy1:',dummy1,'dummy2:',dummy2
-    dummy1 %= Fp.order()
-    dummy2 %= Fp.order()
-    print 'e(P,Q)^(dummy1):',pow(foo4,dummy1)
-    print 'e(P,Q)^(dummy2):',pow(foo4,dummy2)
-    print 'dummy1:',dummy1,'dummy2:',dummy2
-    print 'e(P,Q)^(V*W):',pow(foo4,PoC['V*P']*PoC['W*Q'])
-    print 'e(P,Q)^(Y+T*H):',(pow(foo4,PoC['Y*P']+PoC['h(s)*P']*CRS['t(s)P']))
-    print 'e(P,Q)^(Y)  :',pow(foo4,PoC['Y*P'])
-    print 'e(P,Q)^(T*H):',pow(foo4,PoC['h(s)*P']*CRS['t(s)P'])
+    p = Fp.order()
+    k = GF(n)(p).multiplicative_order()
 
-    print 'e(P,Q)^(V*W-Y)',pow(foo4,(PoC['V*P']*PoC['W*Q']-PoC['Y*P']))
+    print '*********************************'
+    print '*** Verifier checks the proof ***'
+    print '*********************************'
     
-    return True  
+    ### EQ(1) ###
+    Q = VerifK['Q']
+    alphavQ = VerifK['alphavQ']
+    rvVmidP = Proof['rvVmid(s)P']
+    alphavrvVmidP = Proof['alphavrvVmid(s)P']
 
-######################################
-# 
+    RHS = alphavrvVmidP.tate_pairing(Q, n, k)
+    LHS = rvVmidP.tate_pairing(alphavQ, n, k)
 
-def verif_old(E, CRS, PoC, P):
-    Fp = E.base_field()
-    print 'Fp',Fp
+    if RHS==LHS: print '   EQ(1):OK'
+    else:        print '   EQ(1):NOT OK'
 
-    V = int(PoC['V*P']%Fp.order())
-    print 'V:',V, type(V)
-    W = int(PoC['W*Q']%Fp.order())
-    print 'W:',W, type(W)
-    VW = (V*W)%Fp.order()
-    print 'V*W:', VW
+    ###print 'RHS:',RHS
+    ###print '    ',my_tate_pairing(E, alphavrvVmidP, Q)
 
-    Y = PoC['Y*P']%Fp.order()
-    print 'Y:',Y, type(W)
+    ###print 'LHS:',LHS
+    ###print '    ',my_tate_pairing(E, rvVmidP, alphavQ)
 
-    T = CRS['t(s)P']%Fp.order()
-    print 'T:',T, type(T)
-    H = PoC['h(s)*Q']%Fp.order()
-    print 'H:',H, type(H)
-    YTH = (Y+T*H)%Fp.order()
-
-    print 'Y+T*H:',YTH
-   
-    print '##############################################'
-
-    VWP  = VW*CRS['P']
-    n    = VWP.order()
-    p    = Fp.order()
-    print 'VWP.order():',n
-    print 'Fp.order() :',p
-    k    = GF(n)(p).multiplicative_order()
-    e    = Integer((p^k-1)/n)
-    ans1 = VWP.tate_pairing(CRS['Q'], n, k)
-    print 'ans1:',ans1, ans1^n
-    ans1a = VWP._miller_(CRS['Q'],n)
-    VP    = (V%Fp.order())*CRS['P']
-    WQ    = (W%Fp.order())*CRS['Q']
-    ans1b = VP._miller_(WQ,n)
-    print 'ans1(miller fn):', ans1a, ans1b
-    print 'e:',e
-    print 'ans1^e(tate):',ans1a^e, ans1b^(e) #ans12b^e
-
-    S = E.random_point()
-    S = EK(S)
-    Q = CRS['Q']
-    dummy1 = VP._miller_(WQ+S,n)
-    dummy2 = VP._miller_(S,n)
-    print 'S:',S
-    print 'dummy1:',dummy1
-    print 'dummy2:',dummy2    
-    print 'result:',(dummy1/dummy2)^e
-    dummy1 = VWP._miller_(Q+S,n)
-    dummy2 = VWP._miller_(S,n)
-    print 'dummy1:',dummy1
-    print 'dummy2:',dummy2    
-    print 'result:',(dummy1/dummy2)^e
-
-    print 'VWP:',VWP
-    print 'VWP:',Integer(PoC['V*P']*PoC['W*Q'])*CRS['P']
-    print 'VWP:',(Integer(PoC['V*P']*PoC['W*Q'])%Fp.order())*CRS['P']
-    print 'VWP:',Integer(PoC['V*P']*PoC['W*Q'])
-    #for i in range (Integer(PoC['V*P']*PoC['W*Q'])): print i*CRS['P']
-
-    YTHP = YTH*CRS['P']
-    ans2 = YTHP.tate_pairing(CRS['Q'], n, k)
-    print 'ans2:',ans2, ans2^n, YTHP._miller_(CRS['Q'],n)^e
-
-    VP   = (V%Fp.order())*CRS['P']
-    WQ   = (W%Fp.order())*CRS['Q']
-    ans3 = VP.tate_pairing(WQ, n, k)
-    ###ans31 = WQ.tate_pairing(VP, n, k)
-    print 'ans3:',ans3, ans3^n, VP in G1_EK, WQ in G2, VP._miller_(WQ,n)^e
-    print 'ans31:',ans31
-    print 'ans3/ans31:',ans3/ans31
-
-    P     = CRS['P']
-    Q     = CRS['Q']
-    ans4  = P.tate_pairing(CRS['Q'], n, k)
-    ans41 = pow(ans4,(VW)%p)
-    ans42 = pow(ans4,VW)
-    ###print 'ans4:',ans4, ans4^n
-    print 'ans41:',ans41, ans41^n
-    print 'ans42:',ans42, ans42^n 
-
-    ans51 = P.tate_pairing(W*Q, n, k)
-    ans52 = (W*CRS['P']).tate_pairing(CRS['Q'], n, k)
-    print 'ans51:',ans51,'ans52:',ans52
-
-    ans51 = P.tate_pairing(V*Q, n, k)
-    ans52 = (V*CRS['P']).tate_pairing(CRS['Q'], n, k)
-    print 'ans51:',ans51,'ans52:',ans52
-
-    ans51 = (V*W*P).tate_pairing(Q, n, k)
-    ans52 = P.tate_pairing(V*W*Q, n, k)
-    print 'ans51:',ans51,'ans52:',ans52
-
-    ans51 = (((V*W)%Fp.order())*P).tate_pairing(Q, n, k)
-    ans52 = P.tate_pairing(((V*W)%Fp.order())*Q, n, k)
-    print 'ans51:',ans51,'ans52:',ans52
-
-
-    pause
-
-    print 'P:',P, type(P), CRS['P'], type(CRS['P'])
-    print 'V:',V, PoC['V*P']
-    print '130*P:',130*E(P)
-    print '12368*P:',12368*E(P)
-    V1 = V*CRS['P']
-    print 'V1:',V1
-    V2 = int((PoC['V*P']%Fp.order()))*CRS['P']
-    print 'V2:',V2
-    V3 = PoC['V*P']*CRS['P']
-    print 'V3:',V3
-    V4 = int(PoC['V*P'])*CRS['P']
-    print 'V4:',V4
-    pause
-    ####W = int((PoC['W*Q']%Fp.order()))#*CRS['Q']
-    ####print 'V:',V, V in G1_EK
-    ####print 'W:',W, W in G2
-    ###V = int(PoC['V*P'])*CRS['P']
-    ####W = int(PoC['W*Q'])#*CRS['Q']
-    ###print 'V:',V, V in G1_EK
-    ###print 'W:',W, W in G2
-    ###print 'type(CRS[P]):',type(CRS['P']), CRS['P'], CRS['P'].order()
-    ###print '-----', 134*CRS['P']
-    print '@@@@@', 53*CRS['P']
-    print '%%%%%', (134+pow(53,4))*CRS['P']
-    ###for i in range(50):
-    ###	print 'i:',i,2+i*53,(2+i*53*53)*CRS['P']
-    pause
-    n = V.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo1 = V.tate_pairing(W, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(V*P,W*Q):',foo1
+    ### EQ(2) ###
+    alphawP = VerifK['alphawP']
+    rwWmidQ = Proof['rwWmid(s)Q']
+    alphawrwWmidP = Proof['alphawrwWmid(s)P']
     
-    T = CRS['t(s)P']*CRS['P']
-    H = PoC['h(s)*Q']*CRS['Q']
-    n = T.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo2 = T.tate_pairing(H, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(T*P,H*Q):',foo2
+    RHS = alphawrwWmidP.tate_pairing(Q, n, k)
+    LHS = alphawP.tate_pairing(rwWmidQ, n, k)
 
-    H = PoC['h(s)*P']*CRS['P']
-    T = CRS['t(s)P']*CRS['Q']
-    n = H.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo2 = H.tate_pairing(T, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(H*P,T*Q):',foo2
+    if RHS==LHS: print '   EQ(2):OK'
+    else:        print '   EQ(2):NOT OK'
 
-    Y = PoC['Y*P']*CRS['P']
-    Q = CRS['Q']
-    n = Y.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo3 = Y.tate_pairing(Q, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(Y*P,Q):',foo3
+    ### EQ(3) ###
+    alphayQ = VerifK['alphayQ']
+    ryYmidP = Proof['ryYmid(s)P']
+    alphayryYmidP = Proof['alphayryYmid(s)P']
 
-    P = CRS['P']
-    n = P.order()
-    k = GF(n)(Fp.order()).multiplicative_order()
-    foo4 = P.tate_pairing(Q, n, k)
-    print 'n:',n
-    print 'k:',k
-    print 'e(P,Q):',foo4
-    V = int(PoC['V*P'])
-    W = int(PoC['W*Q'])
-    Y = int(PoC['Y*P'])
-    T = int(CRS['t(s)P'])
-    H = int(PoC['h(s)*P'])
-    print 'V:',V,'W:',W,'Y:',Y,'T:',T,'H:',T
-    dummy1 = V*W
-    dummy2 = Y+T*H
-    print 'e(P,Q)^(dummy1):',pow(foo4,dummy1)
-    print 'e(P,Q)^(dummy2):',pow(foo4,dummy2)
-    print 'dummy1:',dummy1,'dummy2:',dummy2
-    dummy1 %= Fp.order()
-    dummy2 %= Fp.order()
-    print 'e(P,Q)^(dummy1):',pow(foo4,dummy1)
-    print 'e(P,Q)^(dummy2):',pow(foo4,dummy2)
-    print 'dummy1:',dummy1,'dummy2:',dummy2
-    print 'e(P,Q)^(V*W):',pow(foo4,PoC['V*P']*PoC['W*Q'])
-    print 'e(P,Q)^(Y+T*H):',(pow(foo4,PoC['Y*P']+PoC['h(s)*P']*CRS['t(s)P']))
-    print 'e(P,Q)^(Y)  :',pow(foo4,PoC['Y*P'])
-    print 'e(P,Q)^(T*H):',pow(foo4,PoC['h(s)*P']*CRS['t(s)P'])
+    RHS = alphayryYmidP.tate_pairing(Q, n, k)
+    LHS = ryYmidP.tate_pairing(alphayQ, n, k)
 
-    print 'e(P,Q)^(V*W-Y)',pow(foo4,(PoC['V*P']*PoC['W*Q']-PoC['Y*P']))
+    if RHS==LHS: print '   EQ(3):OK'
+    else:        print '   EQ(3):NOT OK'
+
+    ### EQ(4) ###
+    ZmidP = Proof['Zmid(s)P']
+    betaQ = VerifK['betaQ']
+    betaP = VerifK['betaP']
+
+    RHS  = (rvVmidP+ryYmidP).tate_pairing(betaQ, n, k)
+    RHS *= betaP.tate_pairing(rwWmidQ, n, k)
+    LHS  = ZmidP.tate_pairing(Q, n, k)
     
+    if RHS==LHS: print '   EQ(4):OK'
+    else:        print '   EQ(4):NOT OK'
+
+    ### EQ(5) ###
+    rytP = VerifK['ryt(s)P']
+    hQ   = Proof['h(s)Q']
+
+    c0rvV0P = c0*VerifK['rvV0(s)P']
+    c2rvV2P = c2*VerifK['rvV2(s)P']
+
+    c1rwW1Q = c1*VerifK['rwW1(s)Q']
+    c3rwW3Q = c3*VerifK['rwW3(s)Q']
+    c4rwW4Q = c4*VerifK['rwW4(s)Q']
+    
+    c7ryY7P = c7*VerifK['ryY7(s)P']
+
+    rvVP = c0rvV0P + c2rvV2P + Proof['rvVmid(s)P']
+    rwWQ = c1rwW1Q + c3rwW3Q + c4rwW4Q + Proof['rwWmid(s)Q']
+    ryYP = c7ryY7P + Proof['ryYmid(s)P'] 
+
+    RHS  = rvVP.tate_pairing(rwWQ, n, k)
+    LHS  = ryYP.tate_pairing(Q, n, k)
+    LHS *= rytP.tate_pairing(hQ, n, k)	
+
+    if RHS==LHS: print '   EQ(5):OK'
+    else:        print '   EQ(5):NOT OK'
+
+    ###print '    ',my_tate_pairing(E, ryYP, Q)
+    ###GT = [ ( P.tate_pairing(Q, n, k) )^i for i in range(P.order())]
+    ###print '   GT:',GT
+
     return True  
 
 ####################################
 # c: fInput
 # h: polynomial s.t. p(x) = h(x)t(x)
 
-def generatePOC(E, x5, x6, x7, c, c5, c6, c7, CRS):
-    Fp = E.base_field()
+def generatePOC(E, x5, x6, x7, c, c5, c6, c7, EvalK):
+###    Fp = E.base_field()
+###    R  = PolynomialRing(Fp, 'x')
+###    p  = Fp.order()
+
+    p  = int(P.order())
+    Fp = GF(p)
     R  = PolynomialRing(Fp, 'x')
-    p  = Fp.order()
+
     xlist = []
     ylist = []
     ###print 'R:',R
@@ -444,11 +127,6 @@ def generatePOC(E, x5, x6, x7, c, c5, c6, c7, CRS):
     	foo = False
 	while foo == False:
 		x_i = int(Fp.random_element())
-		if fHardCoded == true:
-		   if   i==0: x_i = 8
-		   elif i==1: x_i = 1
-		   elif i==2: x_i = 2
-		   else     : x_i = 3
 		if (x_i!=0) and (x_i!=x5) and (x_i!=x6) and (x_i!=x7): foo = True
 	dummy1 = getTarget(x_i, x5, x6, x7, p)
 	dummy1 = inverse_mod(dummy1, p)
@@ -458,43 +136,42 @@ def generatePOC(E, x5, x6, x7, c, c5, c6, c7, CRS):
 	xlist.append(x_i)
 	ylist.append(y_i) 
     h = R.lagrange_polynomial([(xlist[i], ylist[i]) for i in range(4)])
+    ###h = R.lagrange_polynomial([(xlist[i], ylist[i]) for i in range(len(xlist))])
     h_coeff = h.coefficients()
     print '   h(x)=',h
     ###print '   h_i:',h_coeff[0], ' ', h_coeff[1]
-    PoCK = {}
-    PoCK['V*P']    = c[0]*CRS['V0(s)P']+c[2]*CRS['V2(s)P']+c5*CRS['V5(s)P']
-    PoCK['W*Q']    = c[1]*CRS['W1(s)Q']+c[3]*CRS['W3(s)Q']+c[4]*CRS['W4(s)Q']+c6*CRS['W6(s)Q']
-    PoCK['Y*P']    = c5*CRS['Y5(s)P']+c6*CRS['Y6(s)P']+c7*CRS['Y7(s)P']
-    PoCK['h(s)*P'] = int(h_coeff[0])*CRS['P']+int(h_coeff[1])*CRS['s^1*P']   
-    PoCK['h(s)*Q'] = int(h_coeff[0])*CRS['Q']+int(h_coeff[1])*CRS['s^1*Q']   
 
-    print '   PUBLIC'
-    print '      PoC:',PoCK
+    print '******************************'
+    print '*** Worker generates proof ***'
+    print '******************************'
+    
+    PI = {}
+    PI['rvVmid(s)P']       = c5*EvalK['rvV5(s)P']
+    PI['alphavrvVmid(s)P'] = c5*EvalK['alphavrvV5(s)P']
 
-    s    = secret
-    foo1 = c[0]*getV0(s, x5, x6, x7, Fp.order())+c[2]*getV2(s, x5, x6, x7, Fp.order())+c5*getV5(s, x5, x6, x7, Fp.order())
-    foo2 = c[1]*getW1(s, x5, x6, x7, Fp.order())+c[3]*getW3(s, x5, x6, x7, Fp.order())+c[4]*getW4(s, x5, x6, x7, Fp.order())+c6*getW6(s, x5, x6, x7, Fp.order())
-    foo3 = c5*getY5(s, x5, x6, x7, Fp.order())+c6*getY6(s, x5, x6, x7, Fp.order())+c7*getY7(s, x5, x6, x7, Fp.order())
-    foo4 = getTarget(s, x5, x6, x7, Fp.order())
-    foo5 = int(h_coeff[0])+int(h_coeff[1])*s  
-    print '   Sanity check:'
-    print '        v(s)          =',foo1
-    print '        w(s)          =',foo2
-    print '        y(s)          =',foo3
-    print '        t(s)          =',foo4
-    print '        h(s)          =',foo5
-    print '        v(s)*w(s)     =',(foo1*foo2),(foo1*foo2)%Fp.order()
-    print '        y(s)+t(s)*h(s)=',(foo3+foo4*foo5),(foo3+foo4*foo5)%Fp.order()
-   
+    PI['rwWmid(s)Q']	   = c6*EvalK['rwW6(s)Q']
+    PI['alphawrwWmid(s)P'] = c6*EvalK['alphawrwW6(s)P']
 
-    return PoCK
+    PI['ryYmid(s)P']       = c5*EvalK['ryY5(s)P'] + c6*EvalK['ryY6(s)P']
+    PI['alphayryYmid(s)P'] = c5*EvalK['alphayryY5(s)P'] + c6*EvalK['alphayryY6(s)P']
+
+    PI['Zmid(s)P'] = c5*EvalK['z5(s)P'] + c6*EvalK['z6(s)P']
+
+    PI['h(s)Q'] = int(h_coeff[0])*EvalK['s^0Q'] + int(h_coeff[1])*EvalK['s^1Q']
+
+    print '   PROOF PI:'
+    print '      ',PI
+
+    return PI
 
 #############################################
 # c5, c6, c7: values of the circuit wires 
 
 def evaluateQAP(x5, x6, x7, E, c):
-    Fp = E.base_field()
-    p  = Fp.order()
+    ###Fp = E.base_field()
+    ###p  = Fp.order()
+    p  = P.order()
+    Fp = GF(p)
     c5, c6, c7 = var('c5, c6, c7')
 
     print '****************************'
@@ -520,52 +197,83 @@ def evaluateQAP(x5, x6, x7, E, c):
 # 	PubK contains the evaluation and the public verification keys
 
 def generatePublicParams(s, P, Q, x5, x6, x7, E):
-    Fp = E.base_field()
-    PubK = {}
+    ###Fp = E.base_field()
+    ###p  = Fp.order()
+    p  = P.order()
+    Fp = GF(p)
 
-    PubK['P']      = P
-    PubK['Q']      = Q
-    PubK['V0(s)P'] = getV0(s, x5, x6, x7, Fp.order())*P
-    PubK['V2(s)P'] = getV2(s, x5, x6, x7, Fp.order())*P
-    PubK['V5(s)P'] = getV5(s, x5, x6, x7, Fp.order())*P
-    PubK['W1(s)Q'] = getW1(s, x5, x6, x7, Fp.order())*Q
-    PubK['W3(s)Q'] = getW3(s, x5, x6, x7, Fp.order())*Q
-    PubK['W4(s)Q'] = getW4(s, x5, x6, x7, Fp.order())*Q
-    PubK['W6(s)Q'] = getW6(s, x5, x6, x7, Fp.order())*Q
-    PubK['Y5(s)P'] = getY5(s, x5, x6, x7, Fp.order())*P
-    PubK['Y6(s)P'] = getY6(s, x5, x6, x7, Fp.order())*P
-    PubK['Y7(s)P'] = getY7(s, x5, x6, x7, Fp.order())*P
-    PubK['s^1*P']  = s*P
-    PubK['s^2*P']  = pow(s,2)*P
-    PubK['s^3*P']  = pow(s,3)*P
-    PubK['s^1*Q']  = s*Q
-    PubK['s^2*Q']  = pow(s,2)*Q
-    PubK['s^3*Q']  = pow(s,3)*Q
-    PubK['t(s)P']  = getTarget(s, x5, x6, x7, Fp.order())*P
-    PubK['t(s)Q']  = getTarget(s, x5, x6, x7, Fp.order())*Q
+    print '**********************************'
+    print '*** Client generates EK and VK ***'
+    print '**********************************'
+    
+    rv=rw=alphav=alphaw=alphay=beta=gamma=0
+    
+    while( rv==0     ): rv     = int(Fp.random_element())
+    while( rw==0     ): rw     = int(Fp.random_element())
+    while( alphav==0 ): alphav = int(Fp.random_element())
+    while( alphaw==0 ): alphaw = int(Fp.random_element())
+    while( alphay==0 ): alphay = int(Fp.random_element())
+    while( beta==0   ): beta   = int(Fp.random_element())
+    while( gamma==0  ): gamma  = int(Fp.random_element())
 
-    ####
-    #PubK['V0(s)P'] = getV0(s, x5, x6, x7, Fp.order())
-    #PubK['V2(s)P'] = getV2(s, x5, x6, x7, Fp.order())
-    #PubK['V5(s)P'] = getV5(s, x5, x6, x7, Fp.order())
-    #PubK['W1(s)Q'] = getW1(s, x5, x6, x7, Fp.order())
-    #PubK['W3(s)Q'] = getW3(s, x5, x6, x7, Fp.order())
-    #PubK['W4(s)Q'] = getW4(s, x5, x6, x7, Fp.order())
-    #PubK['W6(s)Q'] = getW6(s, x5, x6, x7, Fp.order())
-    #PubK['Y5(s)P'] = getY5(s, x5, x6, x7, Fp.order())
-    #PubK['Y6(s)P'] = getY6(s, x5, x6, x7, Fp.order())
-    #PubK['Y7(s)P'] = getY7(s, x5, x6, x7, Fp.order())
-    #PubK['s^1*P']  = s
-    #PubK['s^2*P']  = pow(s,2)
-    #PubK['s^3*P']  = pow(s,3)
-    #PubK['s^1*Q']  = s
-    #PubK['s^2*Q']  = pow(s,2)
-    #PubK['s^3*Q']  = pow(s,3)
-    #PubK['t(s)P']  = getTarget(s, x5, x6, x7, Fp.order())
-    ###
+    ry = (rv*rw)%p
+        
+    print '   SET of RANDOM ELEMENTS:'
+    print '      (rv, rw, ry, alphav, alphaw, alphay, beta, gamma):',rv,rw,ry,alphav,alphaw,alphay,beta,gamma
 
-    print '      CRS:',PubK
-    return (PubK)
+    VK = {}
+
+    VK['P'] = P
+    VK['Q'] = Q
+
+    VK['alphavQ']  = alphav*Q
+    VK['alphawQ']  = alphaw*Q
+    VK['alphawP']  = alphaw*P
+    VK['alphayQ']  = alphay*Q
+
+    VK['betaP']    = beta*P
+    VK['betaQ']    = beta*Q
+    
+    VK['ryT(s)P']  = (ry*getTarget(s, x5, x6, x7, p)%p)*P
+    
+    VK['rvV0(s)P'] = (rv*getV0(s, x5, x6, x7, p)%p)*P
+    VK['rvV2(s)P'] = (rv*getV2(s, x5, x6, x7, p)%p)*P
+
+    VK['rwW1(s)Q'] = (rw*getW1(s, x5, x6, x7, p)%p)*Q
+    VK['rwW3(s)Q'] = (rw*getW3(s, x5, x6, x7, p)%p)*Q
+    VK['rwW4(s)Q'] = (rw*getW4(s, x5, x6, x7, p)%p)*Q 
+  
+    VK['ryY7(s)P'] = (ry*getY7(s, x5, x6, x7, p)%p)*P
+
+    VK['ryt(s)P']  = (ry*getTarget(s, x5, x6, x7, p)%p)*P
+
+    print '   PUBLIC VERIFICATION KEY VK:'
+    print '      ',VK
+    ###printDictionary( VK )
+
+    EK = {}
+    EK['rvV5(s)P']       = (rv*getV5(s, x5, x6, x7, p)%p)*P
+    EK['alphavrvV5(s)P'] = (alphav*rv*getV5(s, x5, x6, x7, p)%p)*P
+    
+    EK['rwW6(s)Q']       = (rw*getW6(s, x5, x6, x7, p)%p)*Q
+    EK['alphawrwW6(s)P'] = (alphaw*rw*getW6(s, x5, x6, x7, p)%p)*P
+    
+    EK['ryY5(s)P']       = (ry*getY5(s, x5, x6, x7, p)%p)*P
+    EK['ryY6(s)P']       = (ry*getY6(s, x5, x6, x7, p)%p)*P
+    EK['alphayryY5(s)P'] = (alphay*ry*getY5(s, x5, x6, x7, p)%p)*P
+    EK['alphayryY6(s)P'] = (alphay*ry*getY6(s, x5, x6, x7, p)%p)*P
+
+    EK['z5(s)P'] = (rv*beta*getV5(s, x5, x6, x7, p)+ry*beta*getY5(s, x5, x6, x7, p)%p)*P
+    EK['z6(s)P'] = (rw*beta*getW6(s, x5, x6, x7, p)+ry*beta*getY6(s, x5, x6, x7, p)%p)*P
+
+    EK['s^0Q'] = (s^0)*Q
+    EK['s^1Q'] = (s^1)*Q
+
+    print '   PUBLIC EVALUATION KEY EK:'
+    print '      ',EK
+
+    return (EK, VK)
+
 
 ###################################################
 # Fp: base field
@@ -573,17 +281,14 @@ def generatePublicParams(s, P, Q, x5, x6, x7, E):
 #      	   	by the index of their output values
 
 def generateQAP(E, s):
-    Fp = E.base_field()
+    ###Fp = E.base_field()
+    p  = P.order()
+    Fp = GF(p)
     x5 = getLabel(Fp)
     x6 = getLabel(Fp)
     x7 = getLabel(Fp)
 
-    if fHardCoded == True:
-       x5 = 6
-       x6 = 7
-       x7 = 4
-
-    t = getTarget(s, x5, x6, x7, Fp.order())
+    t  = getTarget(s, x5, x6, x7, Fp.order())
 
     print '****************************'
     print '*** Client generates QAP ***'
@@ -607,25 +312,25 @@ def getV0(x, x5, x6, x7, p):
     foo1 = inverse_mod(foo1, p)
     foo2 = (x-x5)*(x-x6)
     return (foo1*foo2)%p
-
+    
 def getV2(x, x5, x6, x7, p):
     foo1 = (x5-x6)*(x5-x7)
     foo1 = inverse_mod(foo1, p)
     foo2 = (x-x6)*(x-x7)
     return (foo1*foo2)%p
-
+    
 def getV5(x, x5, x6, x7, p):
     foo1 = (x6-x5)*(x6-x7)
     foo1 = inverse_mod(foo1, p)
     foo2 = (x-x5)*(x-x7)
     return (foo1*foo2)%p
-
+    
 def getW1(x, x5, x6, x7, p):
     foo1 = (x7-x5)*(x7-x6)
     foo1 = inverse_mod(foo1, p)
     foo2 = (x-x5)*(x-x6)
     return (foo1*foo2)%p
-
+    
 def getW3(x, x5, x6, x7, p):
     foo1 = (x5-x6)*(x5-x7)
     foo1 = inverse_mod(foo1, p)
@@ -636,37 +341,37 @@ def getW3(x, x5, x6, x7, p):
     dummy2 = (x-x5)*(x-x7)
     dummy3 = dummy1*dummy2
     return (foo3+dummy3)%p
-
+    
 def getW4(x, x5, x6, x7, p):
     foo1 = (x6-x5)*(x6-x7)
     foo1 = inverse_mod(foo1, p)
     foo2 = (x-x5)*(x-x7)
     return (foo1*foo2)%p
-
+    
 def getW6(x, x5, x6, x7, p):
     foo1 = (x7-x5)*(x7-x6)
     foo1 = inverse_mod(foo1, p)
     foo2 = (x-x5)*(x-x6)
     return (foo1*foo2)%p
-
+    
 def getY5(x, x5, x6, x7, p):
     foo1 = (x5-x6)*(x5-x7)
     foo1 = inverse_mod(foo1, p)
     foo2 = (x-x6)*(x-x7)
     return (foo1*foo2)%p
-
+    
 def getY6(x, x5, x6, x7, p):
     foo1 = (x6-x5)*(x6-x7)
     foo1 = inverse_mod(foo1, p)
     foo2 = (x-x5)*(x-x7)
     return (foo1*foo2)%p
-
+    
 def getY7(x, x5, x6, x7, p):
     foo1 = (x7-x5)*(x7-x6)
     foo1 = inverse_mod(foo1, p)
     foo2 = (x-x5)*(x-x6)
     return (foo1*foo2)%p
-
+    
 def getP(x, x5, x6, x7, p, c, c5, c6, c7):
     V0 = getV0(x, x5, x6, x7, p)
     V2 = getV2(x, x5, x6, x7, p)
@@ -692,7 +397,8 @@ def getLabel(Fp):
     while foo == False:
     	  dummy = int(Fp.random_element())
 	  if dummy != 0: foo = True
-    return dummy
+    ###return dummy
+    return dummy%(P.order())
 
 ######################
 # t: target polynomial
@@ -700,13 +406,16 @@ def getLabel(Fp):
 def getTarget(x, x5, x6, x7, p):
     foo = (x-x5)*(x-x6)*(x-x7)
     return foo%p
-
-################
+    
+######################
 # Fp: base field
+# number of inputs = 4
 
 def setInputData(E):
     mylist = []
-    Fp = E.base_field()
+    ###Fp = E.base_field()
+    p  = P.order()
+    Fp = GF(p)
     mylist.append(1)
     for i in range(4):
     	foo = False
@@ -715,8 +424,11 @@ def setInputData(E):
 	      if dummy != 0:
 	      	 foo = True
 		 mylist.append(dummy)
-    if fHardCoded == True:
-       mylist[:] = []
-       mylist = [1,2,6,5,3]
-       mylist = [1,2,2,7,3]
     return (mylist)
+
+################
+#
+
+def printDictionary(D):
+    for x in D:
+    	print x,':',D[x]
