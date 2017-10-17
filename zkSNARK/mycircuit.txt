@@ -1,0 +1,6 @@
+input 0
+input 1
+input 2
+mul in 2 0 1 out 1 3
+mul in 2 3 2 out 1 4
+output 4
