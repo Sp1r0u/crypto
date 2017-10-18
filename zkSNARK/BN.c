@@ -8,6 +8,7 @@
 #include "BN.h"
 
 void init_curve( struct curve_t *c ) {
+  printf ("\n**** EC Settings ****\n");
   mpz_init( c->x );
   mpz_init( c->tx );
   mpz_init( c->nx );
@@ -23,7 +24,7 @@ void init_curve( struct curve_t *c ) {
   
   mpz_set_str( c->nx, "205523667896953300194895899082072403858390252929", 10 );
   
-  gmp_printf("x  = %Zd\n", c->x);
+  gmp_printf("\nx  = %Zd\n", c->x);
   gmp_printf("tx = %Zd\n", c->tx);
   gmp_printf("px = %Zd\n", c->px);
   gmp_printf("nx = %Zd\n", c->nx);

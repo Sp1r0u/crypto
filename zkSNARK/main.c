@@ -52,6 +52,9 @@ int main( int argc, char **argv ) {
   set_random_input_values( C, Fp, RND_STATE );
   display_circuit( C );
   display_mul_gate( C );
+
+  eval_circuit( C );
+  display_circuit( C );
   /*  struct element_t *e1 = malloc( sizeof( struct element_t ));
   struct element_t *e2 = malloc( sizeof( struct element_t ));
   struct element_t *e3 = malloc( sizeof( struct element_t ));

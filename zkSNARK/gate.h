@@ -17,4 +17,6 @@ struct gate_t {
   struct field_t *field;
 };
 
+void eval_gate( struct gate_t* );
+
 #endif /* _GATE_H_ */

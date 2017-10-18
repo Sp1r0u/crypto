@@ -7,6 +7,20 @@
 #define bufSize 1024
 #define strSize 20
 
+//==============================================
+//==============================================
+
+void eval_circuit( struct circuit_t *c ) {
+  int i;
+  printf ("\n**** Circuit Evaluation ****\n");
+  for (i=0; i<c->nGate; i++) {
+    eval_gate( c->gate[i] );
+  }
+}
+
+//==============================================
+//==============================================
+
 void init_circuit( struct circuit_t *c, struct field_t *Fp, FILE *fptr, gmp_randstate_t rnd_state ) {
   char buf[bufSize];
   char str[strSize];
@@ -21,7 +35,7 @@ void init_circuit( struct circuit_t *c, struct field_t *Fp, FILE *fptr, gmp_rand
     else if( strcmp(str,"mul")==0 ) {nMul_gate+=1;}
     else if( strcmp(str,"add")==0 ) {nAdd_gate+=1;}
   }
-
+  
   c->nWire = nInput_wire + nMul_gate + nAdd_gate;
   c->nMul_gate = nMul_gate;
   c->nAdd_gate = nAdd_gate;
@@ -31,8 +45,9 @@ void init_circuit( struct circuit_t *c, struct field_t *Fp, FILE *fptr, gmp_rand
   c->wire = malloc( (c->nWire) * sizeof( struct wire_t ));
   //c->mul_gate = malloc( (c->nMul_gate) * sizeof( struct gate_t ));
   //c->add_gate = malloc( (c->nAdd_gate) * sizeof( struct gate_t ));
-  c->gate = malloc( (c->nGate) * sizeof( struct gate_t ));
-  
+  c->gate = malloc( (c->nGate) * sizeof( struct gate_t* )); //allocates an array of pointers to gate_t
+
+  printf ("\n**** Circuit Initialization ****\n");
   printf ("\nnb wires: %d\n", c->nWire);
   printf ("nb gates: %d\n", c->nGate); 
   printf ("nb mult. gates: %d\n", c->nMul_gate);
@@ -80,15 +95,16 @@ void init_circuit( struct circuit_t *c, struct field_t *Fp, FILE *fptr, gmp_rand
       }
       i_mulgate+=1;
       */
-      c->gate[i_gate].type = "mul";
-      c->gate[i_gate].field = Fp;
-      rnd_field_elt( c->gate[i_gate].label, c->gate[i_gate].field, rnd_state);
-      c->gate[i_gate].ninput = i;
-      c->gate[i_gate].noutput = l;
+      c->gate[i_gate] = malloc( sizeof( struct gate_t ));
+      c->gate[i_gate]->type = "mul";
+      c->gate[i_gate]->field = Fp;
+      rnd_field_elt( c->gate[i_gate]->label, c->gate[i_gate]->field, rnd_state);
+      c->gate[i_gate]->ninput = i;
+      c->gate[i_gate]->noutput = l;
       for (dummy=0; dummy<c->nWire; dummy++) {
-      	if      (c->wire[dummy].id==j) {c->gate[i_gate].linput=&(c->wire[dummy]);}
-	else if (c->wire[dummy].id==k) {c->gate[i_gate].rinput=&(c->wire[dummy]);}
-	else if (c->wire[dummy].id==m) {c->gate[i_gate].output=&(c->wire[dummy]);}
+      	if      (c->wire[dummy].id==j) {c->gate[i_gate]->linput=&(c->wire[dummy]);}
+	else if (c->wire[dummy].id==k) {c->gate[i_gate]->rinput=&(c->wire[dummy]);}
+	else if (c->wire[dummy].id==m) {c->gate[i_gate]->output=&(c->wire[dummy]);}
       }
       c->index[i_index]=i_gate;
       i_index+=1;
@@ -118,17 +134,17 @@ void init_circuit( struct circuit_t *c, struct field_t *Fp, FILE *fptr, gmp_rand
       }
       i_addgate+=1;
       */
-
-      c->gate[i_gate].type = "add";
-      c->gate[i_gate].field = Fp;
-      mpz_init( c->gate[i_gate].label );
-      mpz_set_si( c->gate[i_gate].label, -99 );
-      c->gate[i_gate].ninput = i;
-      c->gate[i_gate].noutput = l;
+      c->gate[i_gate] = malloc( sizeof( struct gate_t ));
+      c->gate[i_gate]->type = "add";
+      c->gate[i_gate]->field = Fp;
+      mpz_init( c->gate[i_gate]->label );
+      mpz_set_si( c->gate[i_gate]->label, -99 );
+      c->gate[i_gate]->ninput = i;
+      c->gate[i_gate]->noutput = l;
       for (dummy=0; dummy<c->nWire; dummy++) {
-      	if      (c->wire[dummy].id==j) {c->gate[i_gate].linput=&(c->wire[dummy]);}
-	else if (c->wire[dummy].id==k) {c->gate[i_gate].rinput=&(c->wire[dummy]);}
-	else if (c->wire[dummy].id==m) {c->gate[i_gate].output=&(c->wire[dummy]);}
+      	if      (c->wire[dummy].id==j) {c->gate[i_gate]->linput=&(c->wire[dummy]);}
+	else if (c->wire[dummy].id==k) {c->gate[i_gate]->rinput=&(c->wire[dummy]);}
+	else if (c->wire[dummy].id==m) {c->gate[i_gate]->output=&(c->wire[dummy]);}
       }
       i_gate+=1;
     }
@@ -144,7 +160,6 @@ void init_circuit( struct circuit_t *c, struct field_t *Fp, FILE *fptr, gmp_rand
       }
       if (k<0) {printf("error: couldn't find output wire %d... exiting now!\n",i); exit(1);}
     }
-
     else {printf("error: %s not defined... exiting now!\n",str); exit(1);}
   }
 }
@@ -155,9 +170,9 @@ void init_circuit( struct circuit_t *c, struct field_t *Fp, FILE *fptr, gmp_rand
 void display_circuit( struct circuit_t *c ) {
   int i;
 
-  printf("\nwire ID | type(input, intermed., output) | value\n");
+  printf("\nwire ID | type(input, intermed., output) | value(dec, hex)\n");
   for (i=0; i<c->nWire; i++) {
-    gmp_printf("wire %d %s %Zd\n", c->wire[i].id, c->wire[i].type, c->wire[i].value );
+    gmp_printf("wire %d %s %Zd %#Zx\n", c->wire[i].id, c->wire[i].type, c->wire[i].value, c->wire[i].value );
   }
   
   /*  
@@ -191,14 +206,14 @@ void display_circuit( struct circuit_t *c ) {
   for (i=0; i<c->nGate; i++) {
     //gmp_printf("%s %Zd %Zd %d %d %d %d %d\n",
     gmp_printf("%s %Zd %d %d %d %d %d\n",
-	       c->gate[i].type,
+	       c->gate[i]->type,
 	       //c->add_gate[i].field->p,
-	       c->gate[i].label, 
-	       c->gate[i].ninput,
-	       c->gate[i].linput->id,
-	       c->gate[i].rinput->id,
-	       c->gate[i].noutput,
-	       c->gate[i].output->id);  
+	       c->gate[i]->label, 
+	       c->gate[i]->ninput,
+	       c->gate[i]->linput->id,
+	       c->gate[i]->rinput->id,
+	       c->gate[i]->noutput,
+	       c->gate[i]->output->id);  
   }
 }
 
@@ -208,15 +223,16 @@ void display_circuit( struct circuit_t *c ) {
 void display_mul_gate( struct circuit_t *c ) {
   int i;
   for (i=0; i<c->nMul_gate; i++) {
-    gmp_printf("%s %Zd %d %d %d %d %d\n",
-	       c->gate[c->index[i]].type,
+    gmp_printf("%s %Zd %#Zx %d %d %d %d %d\n",
+	       c->gate[c->index[i]]->type,
 	       //c->add_gate[i].field->p,
-	       c->gate[c->index[i]].label, 
-	       c->gate[c->index[i]].ninput,
-	       c->gate[c->index[i]].linput->id,
-	       c->gate[c->index[i]].rinput->id,
-	       c->gate[c->index[i]].noutput,
-	       c->gate[c->index[i]].output->id);
+	       c->gate[c->index[i]]->label,
+	       c->gate[c->index[i]]->label,
+	       c->gate[c->index[i]]->ninput,
+	       c->gate[c->index[i]]->linput->id,
+	       c->gate[c->index[i]]->rinput->id,
+	       c->gate[c->index[i]]->noutput,
+	       c->gate[c->index[i]]->output->id);
   }
 }
 
