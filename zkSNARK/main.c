@@ -45,26 +45,13 @@ int main( int argc, char **argv ) {
   struct circuit_t *C = malloc( sizeof( struct circuit_t ));
   
   init_circuit( C, Fp, fptr, RND_STATE );
-  //init_circuit( C, fptr, RND_STATE );
-  
-  int i;
 
-  for (i=0; i<C->nWire; i++) {
-    printf("wire %d %s\n", C->wire[i].id, C->wire[i].type);
-  }
-  
-  for (i=0; i<C->nMul_gate; i++) {
-    gmp_printf("%s %Zd %Zd %d %d %d %d %d\n",
-	       C->mul_gate[i].type,
-	       C->mul_gate[i].field->p,
-	       C->mul_gate[i].label, 
-	       C->mul_gate[i].ninput,
-	       C->mul_gate[i].linput->id,
-	       C->mul_gate[i].rinput->id,
-	       C->mul_gate[i].noutput,
-	       C->mul_gate[i].output->id);  
-  }
-  
+  //display_circuit( C );
+  //display_mul_gate( C );
+
+  set_random_input_values( C, Fp, RND_STATE );
+  display_circuit( C );
+  display_mul_gate( C );
   /*  struct element_t *e1 = malloc( sizeof( struct element_t ));
   struct element_t *e2 = malloc( sizeof( struct element_t ));
   struct element_t *e3 = malloc( sizeof( struct element_t ));
