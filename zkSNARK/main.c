@@ -10,8 +10,9 @@
 #include "BN.h"
 //#include "element.h"
 #include "circuit.h"
-//#include "wire.h"
-//#include "gate.h"
+#include "wire.h"
+#include "gate.h"
+#include "CRS.h"
 
 int main( int argc, char **argv ) {
 
@@ -42,19 +43,26 @@ int main( int argc, char **argv ) {
 
   init_field( Fp, BN );
   
-  struct circuit_t *C = malloc( sizeof( struct circuit_t ));
+  struct circuit_t *C = malloc( sizeof( struct circuit_t ));  
   
   init_circuit( C, Fp, fptr, RND_STATE );
 
   //display_circuit( C );
   //display_mul_gate( C );
 
+  struct crs_t *CRS = malloc( sizeof( struct crs_t ));
+
+  generate_crs( CRS, C, BN, Fp, RND_STATE );
+
   set_random_input_values( C, Fp, RND_STATE );
-  display_circuit( C );
-  display_mul_gate( C );
+
+  //display_circuit( C );
+  //display_mul_gate( C );
 
   eval_circuit( C );
+
   display_circuit( C );
+
   /*  struct element_t *e1 = malloc( sizeof( struct element_t ));
   struct element_t *e2 = malloc( sizeof( struct element_t ));
   struct element_t *e3 = malloc( sizeof( struct element_t ));
@@ -82,6 +90,7 @@ int main( int argc, char **argv ) {
   /* freeing memory */
   free( BN );
   free( Fp );
+  free( C );
   gmp_randclear( RND_STATE );
 
   fclose( fptr );
