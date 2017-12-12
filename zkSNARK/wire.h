@@ -1,8 +1,6 @@
 #ifndef _WIRE_H_
 #define _WIRE_H_
 
-#include <gmp.h>
-
 #include "field.h"
 #include "gate.h"
 
@@ -15,6 +13,9 @@ struct wire_contribution_t {
   int length;
   struct node_t *head;
   struct node_t *tail;
+
+  void (*init) (struct wire_contribution_t*);
+  void (*free) (struct wire_contribution_t*);
 };
 
 struct wire_t {
@@ -24,19 +25,29 @@ struct wire_t {
   struct wire_contribution_t *left_ctrb;
   struct wire_contribution_t *right_ctrb;
   struct wire_contribution_t *output_ctrb;
-  struct poly_ring_t *V; //univariate polynomial ring
-  struct poly_ring_t *W; //univariate polynomial ring
-  struct poly_ring_t *Y; //univariate polynomial ring
+  struct poly_t *V; //univariate polynomial
+  struct poly_t *W; //univariate polynomial
+  struct poly_t *Y; //univariate polynomial
+
+  void (*init) (struct wire_t*); 
+  void (*view) (struct wire_t*);
+  void (*free) (struct wire_t*);
+
+  void (*ctrb) (struct wire_contribution_t*, struct gate_t*);
+  void (*viewCtrb) (struct wire_t*);
 };
 
-void init_wire_contribution( struct wire_t* );
+//================================
+//================================
 
-void wire_contribution_to_mul_gate( struct wire_contribution_t*, struct gate_t* );
+void initWire (struct wire_t*);
+void viewWire (struct wire_t*);
+void freeWire (struct wire_t*);
 
-void print_wire_contribution_to_mul_gate( struct wire_t*);
+void initCtrb (struct wire_contribution_t*);
+void freeCtrb (struct wire_contribution_t*);
 
-void free_wire( struct wire_t* );
-
-void free_wire_contribution( struct node_t* );
+void ctrb2gate (struct wire_contribution_t*, struct gate_t*);
+void viewWireCtrb (struct wire_t*);
 
 #endif /* _WIRE_H_ */

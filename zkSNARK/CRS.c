@@ -1,513 +1,207 @@
-#include <string.h>
-
 #include "CRS.h"
 
-//==============================================
-//==============================================
+void initCRS (struct crs_t *this, struct circuit_t *C, gmp_randstate_t state) {
 
-void generate_EKVK( struct crs_t *crs, struct circuit_t *c, struct curve_t *ec, struct field_t *f ) {
+  this->view = viewCRS;
+  this->free = freeCRS;
+
+  this->Lagrange = generateLagrangePoly;
+
+  this->genQAP  = generateQAP;
+  this->genQAPP = generateQAPPoly;
+
+  this->genEKVK = generateEKeyVKey;
+  
+  this->genT = generateTargetPoly;
+
+  this->genRxXY = generateRxXY;
+  
+  this->param = malloc (NPARAMS * sizeof (struct field_elt_t*) );
+
+  this->EK = malloc( sizeof( struct EKey_t ));
+  this->VK = malloc( sizeof( struct VKey_t ));
+    
+  this->C = C;
+  
   int i;
-
-  struct poly_ring_t *target = malloc( sizeof( struct poly_ring_t )); //univariate polynomial ring
-  generate_target_poly( c, f, target );
-
-  struct field_elt_t *target_eval = malloc( sizeof ( struct field_elt_t ) );
-  mpz_init( target_eval->value );
-
-  target_eval->field = crs->param[3]->field;
-  
-  evaluate_poly( target, crs->param[3], target_eval);
-
-  printf(" target poly.: ");
-  print_poly( target );
-  //gmp_printf(" t(%Zd) = %Zd\n", crs->param[3]->value, target_eval->value);
-
-  //printf(" nIO_V %d nInt_V %d\n",*(crs->nIO_V), *(crs->nInt_V));
-  //printf(" nIO_W %d nInt_W %d\n",*(crs->nIO_W), *(crs->nInt_W));
-  //printf(" nIO_Y %d nInt_Y %d\n",*(crs->nIO_Y), *(crs->nInt_Y));
-  
-  crs->VK->rvVP = malloc( *( crs->nIO_V ) * sizeof( struct extrakey_t* ));
-  crs->VK->rwWQ = malloc( *( crs->nIO_W ) * sizeof( struct extrakey_t* ));
-  crs->VK->ryYP = malloc( *( crs->nIO_Y ) * sizeof( struct extrakey_t* ));
-
-  crs->EK->rvVP = malloc( *( crs->nInt_V ) * sizeof( struct extrakey_t* ));
-  crs->EK->rwWQ = malloc( *( crs->nInt_W ) * sizeof( struct extrakey_t* ));
-  crs->EK->ryYP = malloc( *( crs->nInt_Y ) * sizeof( struct extrakey_t* ));
-  
-  //crs->EK->rvVP = malloc( ( c->nWire - c->nIOWire ) * sizeof( struct extrakey_t* ));
-  //crs->EK->rwWQ = malloc( ( c->nWire - c->nIOWire ) * sizeof( struct extrakey_t* ));
-  //crs->EK->ryYP = malloc( ( c->nWire - c->nIOWire ) * sizeof( struct extrakey_t* ));
-  
-  crs->EK->alpha_vrvVP = malloc( *( crs->nInt_V ) * sizeof( struct extrakey_t* ));
-  crs->EK->alpha_wrwWQ = malloc( *( crs->nInt_W ) * sizeof( struct extrakey_t* ));
-  crs->EK->alpha_yryYP = malloc( *( crs->nInt_Y ) * sizeof( struct extrakey_t* ));
-
-  crs->EK->r_xbetaVP = malloc( ( c->nWire - c->nIOWire ) * sizeof( struct extrakey_t* ));
-  
-  crs->VK->P = &(ec->P);
-  crs->VK->Q = &(ec->Q);
-  
-  element_init_G2( crs->VK->alpha_vQ, ec->pairing );
-  element_init_G2( crs->VK->alpha_wQ, ec->pairing );
-  element_init_G1( crs->VK->alpha_wP, ec->pairing );
-  element_init_G2( crs->VK->alpha_yQ, ec->pairing );
-  element_init_G1( crs->VK->betaP,    ec->pairing );
-  element_init_G2( crs->VK->betaQ,    ec->pairing );
-  element_init_G1( crs->VK->rytP,     ec->pairing );
-
-  for (i=0; i<*(crs->nIO_V); i++) {
-    crs->VK->rvVP[i] = malloc( sizeof( struct extrakey_t ));
-    element_init_G1( crs->VK->rvVP[i]->elt, ec->pairing );
-  }
-
-  for (i=0; i<*(crs->nIO_W); i++) {
-    crs->VK->rwWQ[i] = malloc( sizeof( struct extrakey_t ));
-    element_init_G2( crs->VK->rwWQ[i]->elt, ec->pairing );
-  }
-
-  for (i=0; i<*(crs->nIO_Y); i++) {
-    crs->VK->ryYP[i] = malloc( sizeof( struct extrakey_t ));
-    element_init_G1( crs->VK->ryYP[i]->elt, ec->pairing );
-  }
-
-  for (i=0; i<*(crs->nInt_V); i++) {
-    crs->EK->rvVP[i] = malloc( sizeof( struct extrakey_t ));
-    crs->EK->alpha_vrvVP[i] = malloc( sizeof( struct extrakey_t ));
-    element_init_G1( crs->EK->rvVP[i]->elt, ec->pairing );
-    element_init_G1( crs->EK->alpha_vrvVP[i]->elt, ec->pairing );
-  }
-
-  for (i=0; i<*(crs->nInt_W); i++) {
-    crs->EK->rwWQ[i] = malloc( sizeof( struct extrakey_t ));
-    crs->EK->alpha_wrwWQ[i] = malloc( sizeof( struct extrakey_t ));
-    element_init_G2( crs->EK->rwWQ[i]->elt, ec->pairing );
-    element_init_G2( crs->EK->alpha_wrwWQ[i]->elt, ec->pairing );
-  }
-
-  for (i=0; i<*(crs->nInt_Y); i++) {
-    crs->EK->ryYP[i] = malloc( sizeof( struct extrakey_t ));
-    crs->EK->alpha_yryYP[i] = malloc( sizeof( struct extrakey_t ));
-    element_init_G1( crs->EK->ryYP[i]->elt, ec->pairing );
-    element_init_G1( crs->EK->alpha_yryYP[i]->elt, ec->pairing );
-  }
-
-  for (i=0; i<(c->nWire-c->nIOWire); i++) {
-    crs->EK->r_xbetaVP[i] = malloc( sizeof( struct extrakey_t ));
-    element_init_G1( crs->EK->r_xbetaVP[i]->elt, ec->pairing );
-  }
-  
-  element_mul_mpz( crs->VK->alpha_vQ, *(crs->VK->Q), crs->param[4]->value );
-  element_mul_mpz( crs->VK->alpha_wQ, *(crs->VK->Q), crs->param[5]->value );
-  element_mul_mpz( crs->VK->alpha_wP, *(crs->VK->P), crs->param[5]->value );
-  element_mul_mpz( crs->VK->alpha_yQ, *(crs->VK->Q), crs->param[6]->value );
-  element_mul_mpz( crs->VK->betaP,    *(crs->VK->P), crs->param[7]->value );
-  element_mul_mpz( crs->VK->betaQ,    *(crs->VK->Q), crs->param[7]->value );
-  element_mul_mpz( crs->VK->rytP,     *(crs->VK->P), crs->param[2]->value ); //rytp=ry*P
-  element_mul_mpz( crs->VK->rytP,     crs->VK->rytP, target_eval->value   ); //rytp=t(s)*rytp
-
-  evaluate_rxXY( c, crs );
-  
-  print_EKVK( c, crs );
-
-  free_poly_ring (target->head);
-  free (target);
-  free_field_elt (target_eval);
-
-  target=NULL;
-  target_eval=NULL;
-  
-}
-
-//==============================================
-//==============================================
-
-void generate_crs( struct crs_t *crs, struct circuit_t *c, struct curve_t *ec, struct field_t *f, gmp_randstate_t rnd_state ) {
-  int i;
-  printf ("\n**** Generating CRS ****\n\n");
-
-  crs->param = malloc( NPARAMS * sizeof( struct field_elt_t* ));
-  
-  crs->EK = malloc( sizeof( struct EKey_t ));
-   
-  crs->VK = malloc( sizeof( struct VKey_t ));
-
   for (i=0; i<NPARAMS; i++) {
-    crs->param[i] = malloc( sizeof( struct field_elt_t ));
-        
-    crs->param[i]->field = f;
-    mpz_init( crs->param[i]->value );
+    this->param[i] = malloc (sizeof (struct field_elt_t) );
+    this->param[i]->init = initFieldElt;
+    this->param[i]->init (this->param[i], this->C->field);
+
+    //mpz_set_ui (this->param[i]->value, 1);
 
     if (i!=2) {
-      nonzero_rnd_field_elt( crs->param[i], rnd_state);
+      this->param[i]->field->rndElt (this->param[i], state);
     }
     else {
-      mul_field_elt( crs->param[0], crs->param[1], crs->param[2] ); //ry=rv*rw [mod p]
+      //Ry = Rv * Rw [mod r]
+      this->param[i]->field->mulElt (this->param[0], this->param[1], this->param[2]); 
     }
+    
   }
 
-  for (i=0; i<NPARAMS; i++) {
-    gmp_printf(" param[%d]: %Zd\n", i, crs->param[i]->value);
-  }
+  this->Lagrange (this);
 
-  generate_Lagrange_polynomial( c, f );
+  this->nIO_V = malloc( sizeof( unsigned int ));
+  this->nIO_W = malloc( sizeof( unsigned int ));
+  this->nIO_Y = malloc( sizeof( unsigned int ));
 
-  printf("\n --- Lagrange polynomial ---\n");
-  for (i=0; i<c->nMul_gate; i++) {
-    gmp_printf(" Gate %Zd: ", c->gate[c->index[i]]->root->value);
-    print_poly( c->gate[c->index[i]]->lagrange_poly );
-  }
+  this->nInt_V = malloc( sizeof( unsigned int ));
+  this->nInt_W = malloc( sizeof( unsigned int ));
+  this->nInt_Y = malloc( sizeof( unsigned int ));
   
+  *(this->nIO_V) = 0;
+  *(this->nIO_W) = 0;
+  *(this->nIO_Y) = 0;
 
-  crs->nIO_V = malloc( sizeof( unsigned int ));
-  crs->nIO_W = malloc( sizeof( unsigned int ));
-  crs->nIO_Y = malloc( sizeof( unsigned int ));
+  *(this->nInt_V) = 0;
+  *(this->nInt_W) = 0;
+  *(this->nInt_Y) = 0;
 
-  crs->nInt_V = malloc( sizeof( unsigned int ));
-  crs->nInt_W = malloc( sizeof( unsigned int ));
-  crs->nInt_Y = malloc( sizeof( unsigned int ));
+  this->genQAP (this);
+
+  this->genEKVK (this);
   
-  *(crs->nIO_V) = 0;
-  *(crs->nIO_W) = 0;
-  *(crs->nIO_Y) = 0;
-
-  *(crs->nInt_V) = 0;
-  *(crs->nInt_W) = 0;
-  *(crs->nInt_Y) = 0;
-
-  generate_QAP_polynomial( c, f, crs );
-
-  printf("\n --- QAP polynomial ---\n");
-  for (i=0; i<c->nWire; i++) {
-    gmp_printf(" wire %d:", c->wire[i]->id);
-    printf(" v(x)=");
-    print_poly( c->wire[i]->V );
-    printf("         w(x)=");
-    print_poly( c->wire[i]->W );
-    printf("         y(x)=");
-    print_poly( c->wire[i]->Y );
-  }
-
-  generate_EKVK( crs, c, ec, f );
-
+  this->view (this);
 }
 
-//==============================================
-//==============================================
+//================================
+//================================
 
-void generate_Lagrange_polynomial( struct circuit_t *c, struct field_t *f ) {
-  int i, j;
+void generateEKeyVKey (struct crs_t *this) {
 
-  mpz_t foo;
-  mpz_init(foo);
+  // T: target poly
+  this->T = malloc (sizeof (struct poly_t) ); //univariate polynomial  
+  this->T->init = initPoly;
+  this->T->init (this->T);
 
-  struct field_elt_t *inv = malloc( sizeof ( struct field_elt_t ) ); //inverse of denominator
-  mpz_init( inv->value ); 
-  //inv->field = f;
+  this->genT (this->T, this->C);
+
+  struct field_elt_t *tmp_elt = malloc (sizeof (struct field_elt_t) );
+  tmp_elt->init = initFieldElt;
+  tmp_elt->init (tmp_elt, this->C->field);
   
-  struct field_elt_t *temp1 = malloc( sizeof ( struct field_elt_t ) );
-  mpz_init( temp1->value );
-  //temp1->field = f;
+  this->T->eval (this->T, this->param[3], tmp_elt);
+  //tmp_elt->view (tmp_elt);
+
+  this->VK->RvVP = malloc( *( this->nIO_V ) * sizeof( struct extraKey_t* ));
+  this->VK->RwWQ = malloc( *( this->nIO_W ) * sizeof( struct extraKey_t* ));
+  this->VK->RyYP = malloc( *( this->nIO_Y ) * sizeof( struct extraKey_t* ));
+
+  this->EK->RvVP = malloc( *( this->nInt_V ) * sizeof( struct extraKey_t* ));
+  this->EK->RwWQ = malloc( *( this->nInt_W ) * sizeof( struct extraKey_t* ));
+  this->EK->RyYP = malloc( *( this->nInt_Y ) * sizeof( struct extraKey_t* ));
+
+  this->EK->ALPHAvRvVP = malloc( *( this->nInt_V ) * sizeof( struct extraKey_t* ));
+  this->EK->ALPHAwRwWQ = malloc( *( this->nInt_W ) * sizeof( struct extraKey_t* ));
+  this->EK->ALPHAwRwWP = malloc( *( this->nInt_W ) * sizeof( struct extraKey_t* ));
+  this->EK->ALPHAyRyYP = malloc( *( this->nInt_Y ) * sizeof( struct extraKey_t* ));
+
+  this->EK->RxBETAXP =
+    malloc( ( this->C->nWire - this->C->nIOWire ) * sizeof( struct extraKey_t* ));
+  
+  this->VK->P = &(this->C->field->EC->P);
+  this->VK->Q = &(this->C->field->EC->Q);
+
+  element_init_G2( this->VK->ALPHAvQ, this->C->field->EC->pairing );
+  element_init_G2( this->VK->ALPHAwQ, this->C->field->EC->pairing );
+  element_init_G1( this->VK->ALPHAwP, this->C->field->EC->pairing );
+  element_init_G2( this->VK->ALPHAyQ, this->C->field->EC->pairing );
+  element_init_G1( this->VK->BETAP,   this->C->field->EC->pairing );
+  element_init_G2( this->VK->BETAQ,   this->C->field->EC->pairing );
+  element_init_G1( this->VK->RyTP,    this->C->field->EC->pairing );
+  
+  int i;
+  
+  for (i=0; i<*(this->nIO_V); i++) {
+    this->VK->RvVP[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G1 (this->VK->RvVP[i]->elt, this->C->field->EC->pairing);
+    mpz_init (this->VK->RvVP[i]->value);
+  }
  
-  struct field_elt_t *temp2 = malloc( sizeof ( struct field_elt_t ) );
-  mpz_init_set_ui( temp2->value, 1 );
-  temp2->field = f;
-  
-  for (i=0; i<c->nMul_gate; i++) {
+  for (i=0; i<*(this->nIO_W); i++) {
+    this->VK->RwWQ[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G2 (this->VK->RwWQ[i]->elt, this->C->field->EC->pairing );
+    mpz_init (this->VK->RwWQ[i]->value);
+  }
 
-    gmp_printf("mul_gate: %Zd\n", c->gate[c->index[i]]->root->value);
+  for (i=0; i<*(this->nIO_Y); i++) {
+    this->VK->RyYP[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G1 (this->VK->RyYP[i]->elt, this->C->field->EC->pairing );
+    mpz_init (this->VK->RyYP[i]->value);
+  }
+
+  for (i=0; i<*(this->nInt_V); i++) {
+    this->EK->RvVP[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G1 (this->EK->RvVP[i]->elt, this->C->field->EC->pairing );
+    mpz_init (this->EK->RvVP[i]->value);
     
-    c->gate[c->index[i]]->lagrange_poly = malloc( sizeof( struct poly_ring_t ));
+    this->EK->ALPHAvRvVP[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G1 (this->EK->ALPHAvRvVP[i]->elt, this->C->field->EC->pairing );
+    mpz_init (this->EK->ALPHAvRvVP[i]->value);
+  }
 
-    c->gate[c->index[i]]->lagrange_poly->length = 0;
-
-    mpz_set_ui(foo, 1);
-    insert_poly_ring_node( foo, 0, f, c->gate[c->index[i]]->lagrange_poly );
-
-    //print_poly( c->gate[c->index[i]]->lagrange_poly );
-
-    struct poly_ring_t *temp = malloc( sizeof( struct poly_ring_t ));
-    temp->length=0;
+  for (i=0; i<*(this->nInt_W); i++) {
+    this->EK->RwWQ[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G2 (this->EK->RwWQ[i]->elt, this->C->field->EC->pairing);
+    mpz_init (this->EK->RwWQ[i]->value);
     
-    for (j=0; j<c->nMul_gate; j++) {
-      
-      if (i!=j) {
-	temp->length=0;
-	
-	mpz_set_ui(foo, 1);
-	insert_poly_ring_node( foo, 1, f, temp );
-
-	mpz_neg( foo, c->gate[c->index[j]]->root->value );
-
-	if (fDebug==false) {
-	  mpz_mod( foo, foo, c->gate[c->index[j]]->root->field->p );
-	}
-	
-	else {
-	  mpz_t mod;
-	  mpz_init_set_ui( mod, fOrder);
-	  mpz_mod( foo, foo, mod );
-	  mpz_clear( mod );
-	}
-	insert_poly_ring_node( foo, 0, f, temp );
-
-	mul_poly( c->gate[c->index[i]]->lagrange_poly, temp, c->gate[c->index[i]]->lagrange_poly );
-
-	sub_field_elt( c->gate[c->index[i]]->root, c->gate[c->index[j]]->root, temp1 ); //temp1 = x_i - x_j
-
-	mul_field_elt( temp1, temp2, temp2 ); //temp2 = temp2 * (x_i-x_j)
-      }
-      
-    }//end j-loop
-
-    poly_ordering( c->gate[c->index[i]]->lagrange_poly );
-
-    //print_poly( c->gate[c->index[i]]->lagrange_poly );
-    //gmp_printf("temp2 = %Zd\n", temp2);
-
-    inv_field_elt( inv, temp2 );
-    //gmp_printf("inv = %Zd\n", inv);
-
-    cst_mul_poly( c->gate[c->index[i]]->lagrange_poly, inv, c->gate[c->index[i]]->lagrange_poly);
-    //print_poly( c->gate[c->index[i]]->lagrange_poly );
+    this->EK->ALPHAwRwWQ[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G2 (this->EK->ALPHAwRwWQ[i]->elt, this->C->field->EC->pairing);
+    mpz_init (this->EK->ALPHAwRwWQ[i]->value);
+    
+    this->EK->ALPHAwRwWP[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G1 (this->EK->ALPHAwRwWP[i]->elt, this->C->field->EC->pairing);
+    mpz_init (this->EK->ALPHAwRwWP[i]->value);
+  }
   
-    mpz_set_ui( inv->value, 1 );
-    mpz_set_ui( temp2->value, 1 );
+  for (i=0; i<*(this->nInt_Y); i++) {
+    this->EK->RyYP[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G1 (this->EK->RyYP[i]->elt, this->C->field->EC->pairing);
+    mpz_init (this->EK->RyYP[i]->value);
+    
+    this->EK->ALPHAyRyYP[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G1 (this->EK->ALPHAyRyYP[i]->elt, this->C->field->EC->pairing);
+    mpz_init (this->EK->ALPHAyRyYP[i]->value);
+  }
 
-    if (temp->length>0) {
-      free_poly_ring (temp->head);
-    }
-    free (temp);
-    temp=NULL;
-  }//end i-loop
+  for (i=0; i<(this->C->nWire - this->C->nIOWire); i++) {
+    this->EK->RxBETAXP[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G1 (this->EK->RxBETAXP[i]->elt, this->C->field->EC->pairing);
+    mpz_init (this->EK->RxBETAXP[i]->value);
+  }
 
-  free_field_elt (inv);
-  free_field_elt (temp1);
-  free_field_elt (temp2);
-  mpz_clear( foo );
+  element_mul_mpz( this->VK->ALPHAvQ, *(this->VK->Q), this->param[4]->value );
+  element_mul_mpz( this->VK->ALPHAwQ, *(this->VK->Q), this->param[5]->value );
+  element_mul_mpz( this->VK->ALPHAwP, *(this->VK->P), this->param[5]->value );
+  element_mul_mpz( this->VK->ALPHAyQ, *(this->VK->Q), this->param[6]->value );
+  element_mul_mpz( this->VK->BETAP,   *(this->VK->P), this->param[7]->value );
+  element_mul_mpz( this->VK->BETAQ,   *(this->VK->Q), this->param[7]->value );
+  element_mul_mpz( this->VK->RyTP,    *(this->VK->P), this->param[2]->value );
+  element_mul_mpz( this->VK->RyTP,     this->VK->RyTP, tmp_elt->value       );
 
-  //exit(0);
+  // generate RxXY and ALPHAxRxXY (x={v,w,y} y={P,Q})
+  this->genRxXY (this);
+
+  // generate s^j * Q (j=0,..,deg(t))
+  this->EK->SQ = malloc( (this->T->hiExp (this->T) + 1) * sizeof( struct extraKey_t* ));
+  for (i=0; i<=(int)(this->T->hiExp (this->T)); i++) {
+    this->EK->SQ[i] = malloc( sizeof( struct extraKey_t ));
+    element_init_G2 (this->EK->SQ[i]->elt, this->C->field->EC->pairing);
+    mpz_init (this->EK->SQ[i]->value);
+    tmp_elt->field->powuiElt (this->param[3], tmp_elt, (unsigned int)(i));
+    element_mul_mpz (this->EK->SQ[i]->elt, *(this->VK->Q), tmp_elt->value);
+    mpz_set (this->EK->SQ[i]->value, tmp_elt->value);
+  }
+  
+  tmp_elt->free (tmp_elt);
 }
 
-//==============================================
-//==============================================
+//================================
+//================================
 
-void generate_target_poly( struct circuit_t *c, struct field_t *f, struct poly_ring_t *t ) {
-
-  mpz_t foo;
-  mpz_init(foo);
-
-  t->length = 0;
-  
-  mpz_set_ui(foo, 1);
-  insert_poly_ring_node( foo, 0, f, t );
-
-  int i;
-  for (i=0; i<c->nMul_gate; i++) {
-
-    struct poly_ring_t *temp = malloc( sizeof( struct poly_ring_t ));
-    temp->length=0;
-    
-    mpz_set_ui(foo, 1);
-    insert_poly_ring_node( foo, 1, f, temp );
-
-    mpz_neg( foo, c->gate[c->index[i]]->root->value );
-    insert_poly_ring_node( foo, 0, f, temp );
-    
-    mul_poly( t, temp, t );
-
-    free_poly_ring( temp->head);
-    free (temp);
-    temp = NULL;
-    
-  }
-  
-  poly_ordering( t );
-}
-
-//==============================================
-//==============================================
-
-void generate_Tpoly( struct circuit_t *c, struct field_t *f, struct poly_ring_t *t ) {
-
-  mpz_t foo;
-  mpz_init (foo);
-
-  t->length = 0;
-  
-  mpz_set_ui (foo, 1);
-  insert_poly_ring_node (foo, 0, f, t);
-
-  int i;
-  for (i=0; i<c->nMul_gate; i++) {
-
-    struct poly_ring_t *tmp = malloc (sizeof (struct poly_ring_t));
-    tmp->length=0;
-    
-    mpz_set_ui (foo, 1);
-    insert_poly_ring_node (foo, 1, f, tmp);
-
-    mpz_neg (foo, c->gate[c->index[i]]->root->value);
-    insert_poly_ring_node (foo, 0, f, tmp);
-    
-    mul_poly (t, tmp, t);
-
-    free_poly_ring (tmp->head);
-    free (tmp);
-    
-  }
-  
-  poly_ordering (t);
-
-}
-
-//==============================================
-//==============================================
-
-void print_EKVK( struct circuit_t *c, struct crs_t *crs ) {
-  
-  printf("\n --- VKey ---\n");
-
-  int i;
-  
-  element_printf(" P = %B\n", crs->VK->P);
-  element_printf(" Q = %B\n", crs->VK->Q); 
-  element_printf(" alpha_vQ = %B\n", crs->VK->alpha_vQ);
-  element_printf(" alpha_wQ = %B\n", crs->VK->alpha_wQ);
-  element_printf(" alpha_wP = %B\n", crs->VK->alpha_wP);
-  element_printf(" alpha_yQ = %B\n", crs->VK->alpha_yQ);
-  element_printf(" betaP    = %B\n", crs->VK->betaP);
-  element_printf(" betaQ    = %B\n", crs->VK->betaQ);
-  element_printf(" rytP     = %B\n", crs->VK->rytP);
-
-  for (i=0; i<*(crs->nIO_V); i++) {
-    element_printf(" rvVP(%d) = %B\n", crs->VK->rvVP[i]->wire->id, crs->VK->rvVP[i]->elt);
-  }
-  
-  for (i=0; i<*(crs->nIO_W); i++) {
-    element_printf(" rwWQ(%d) = %B\n", crs->VK->rwWQ[i]->wire->id, crs->VK->rwWQ[i]->elt);
-  }
-  
-  for (i=0; i<*(crs->nIO_Y); i++) {
-    element_printf(" ryYP(%d) = %B\n", crs->VK->ryYP[i]->wire->id, crs->VK->ryYP[i]->elt);
-  }
-
-  printf("\n --- EKey ---\n");
-
-  for (i=0; i<*(crs->nInt_V); i++) {
-    element_printf(" rvVP(%d) = %B\n", crs->EK->rvVP[i]->wire->id, crs->EK->rvVP[i]->elt);
-    element_printf(" alpha_vrvVP(%d) = %B\n", crs->EK->alpha_vrvVP[i]->wire->id, crs->EK->alpha_vrvVP[i]->elt);
-  }
-  
-  for (i=0; i<*(crs->nInt_W); i++) {
-    element_printf(" rwWQ(%d) = %B\n", crs->EK->rwWQ[i]->wire->id, crs->EK->rwWQ[i]->elt);
-    element_printf(" alpha_wrwWQ(%d) = %B\n", crs->EK->alpha_wrwWQ[i]->wire->id, crs->EK->alpha_wrwWQ[i]->elt);
-  }
-  
-  for (i=0; i<*(crs->nInt_Y); i++) {
-    element_printf(" ryYP(%d) = %B\n", crs->EK->ryYP[i]->wire->id, crs->EK->ryYP[i]->elt);
-    element_printf(" alpha_yryYP(%d) = %B\n", crs->EK->alpha_yryYP[i]->wire->id, crs->EK->alpha_yryYP[i]->elt);
-  }
-
-  for (i=0; i<(c->nWire-c->nIOWire); i++) {
-    element_printf(" ( rvbetaV(%d) + rwbetaW(%d) + rybetaY(%d) ) * P = %B\n", crs->EK->r_xbetaVP[i]->wire->id,
-		   crs->EK->r_xbetaVP[i]->wire->id, crs->EK->r_xbetaVP[i]->wire->id, crs->EK->r_xbetaVP[i]->elt);
-  }
-  
-}
-
-//==============================================
-//==============================================
-
-void generate_QAP_polynomial( struct circuit_t *c, struct field_t *f, struct crs_t *crs ) {
-
-  mpz_t foo;
-  mpz_init(foo); 
-  
-  int i;
-  
-  if (c==NULL) {
-    printf("in generate_QAP_polynomial, c does not exist... exiting now!");
-    exit(0);
-  }
-  
-  for (i=0; i<c->nWire; i++) {
-
-    if (c->wire[i]==NULL) {
-      printf("in generate_QAP_polynomial, wire does not exist... exiting now!");
-      exit(0);
-    }
-    
-    c->wire[i]->V = malloc( sizeof( struct poly_ring_t ));
-    c->wire[i]->W = malloc( sizeof( struct poly_ring_t ));
-    c->wire[i]->Y = malloc( sizeof( struct poly_ring_t ));
-    
-    c->wire[i]->V->length = 0;
-    c->wire[i]->W->length = 0;
-    c->wire[i]->Y->length = 0;
-    
-    mpz_set_ui(foo, 0);
-    
-    // V(x)
-    if (c->wire[i]->left_ctrb==NULL) {
-      printf("in generate_QAP_polynomial, left_ctrb does not exist... exiting now!");
-      exit(0);
-    }
-
-    //printf(" length %d\n", c->wire[i]->left_ctrb->length);
-    
-    if (c->wire[i]->left_ctrb->length>0) {
-      insert_poly_ring_node( foo, 0, f, c->wire[i]->V );
-      print_poly(c->wire[i]->V);
-      
-      struct node_t *node = c->wire[i]->left_ctrb->head;
-      
-      while( node != NULL ) {
-	add_poly( c->wire[i]->V, node->gate->lagrange_poly, c->wire[i]->V );
-	node = node->next;
-      }
-      if ( strcmp(c->wire[i]->type,"input")==0 || strcmp(c->wire[i]->type,"output")==0 ) {*(crs->nIO_V)+=1;}
-      else if ( strcmp(c->wire[i]->type,"intermediate")==0 ) {*(crs->nInt_V)+=1;}
-      else { printf("wire's type not defined... exiting now"); exit(0);}
-    }
-
-    // W(x)
-    if (c->wire[i]->right_ctrb->length>0) {
-      insert_poly_ring_node( foo, 0, f, c->wire[i]->W );
-      
-      struct node_t *node = c->wire[i]->right_ctrb->head;
-      
-      while( node != NULL ) {
-	add_poly( c->wire[i]->W, node->gate->lagrange_poly, c->wire[i]->W );
-	node = node->next;
-      }
-      if ( strcmp(c->wire[i]->type,"input")==0 || strcmp(c->wire[i]->type,"output")==0 ) {*(crs->nIO_W)+=1;}
-      else if ( strcmp(c->wire[i]->type,"intermediate")==0 ) {*(crs->nInt_W)+=1;}
-      else { printf("wire's type not defined... exiting now"); exit(0);}
-    }
-    
-    // Y(x)
-    if (c->wire[i]->output_ctrb->length>0) {
-      insert_poly_ring_node( foo, 0, f, c->wire[i]->Y );
-      
-      struct node_t *node = c->wire[i]->output_ctrb->head;
-      
-      while( node != NULL ) {
-	add_poly( c->wire[i]->Y, node->gate->lagrange_poly, c->wire[i]->Y );
-	node = node->next;
-      }
-      if ( strcmp(c->wire[i]->type,"input")==0 || strcmp(c->wire[i]->type,"output")==0 ) {*(crs->nIO_Y)+=1;}
-      else if ( strcmp(c->wire[i]->type,"intermediate")==0 ) {*(crs->nInt_Y)+=1;}
-      else { printf("wire's type not defined... exiting now"); exit(0);}
-    }
-    
-  }// end-loop
-  mpz_clear (foo);  
-}
-
-//==============================================
-//==============================================
-
-void evaluate_rxXY( struct circuit_t *c, struct crs_t *crs) {
+void generateRxXY (struct crs_t *this) {
 
   unsigned int iIOV = 0;
   unsigned int iIOW = 0;
@@ -519,291 +213,626 @@ void evaluate_rxXY( struct circuit_t *c, struct crs_t *crs) {
 
   unsigned int iInt = 0;
 
-  struct field_elt_t *y = malloc( sizeof ( struct field_elt_t ) );
-  y->field = crs->param[3]->field;
+  struct field_elt_t *y0 = malloc( sizeof ( struct field_elt_t ) );
+  y0->init = initFieldElt;
+  y0->init (y0, this->C->field);
 
   struct field_elt_t *y1 = malloc( sizeof ( struct field_elt_t ) );
-  y1->field = crs->param[3]->field;
+  y1->init = initFieldElt;
+  y1->init (y1, this->C->field);
 
   struct field_elt_t *y2 = malloc( sizeof ( struct field_elt_t ) );
-  y2->field = crs->param[3]->field;
+  y2->init = initFieldElt;
+  y2->init (y2, this->C->field);
 
   struct field_elt_t *y3 = malloc( sizeof ( struct field_elt_t ) );
-  y3->field = crs->param[3]->field;
+  y3->init = initFieldElt;
+  y3->init (y3, this->C->field);
 
-  mpz_init( y1->value );
-  mpz_init( y2->value );
-  mpz_init( y3->value );
-    
   int i;
-  for (i=0; i<c->nWire; i++) {
+  struct wire_t *ptr;
+  
+  for (i=0; i<this->C->nWire; i++) {
 
-    if ( strcmp(c->wire[i]->type,"input")==0 || strcmp(c->wire[i]->type,"output")==0 ) {
-      if (c->wire[i]->left_ctrb->length>0) {
-	crs->VK->rvVP[iIOV]->wire = c->wire[i];
-	mpz_init( y->value );
-	evaluate_poly( c->wire[i]->V, crs->param[3], y );
-	mul_field_elt( crs->param[0], y, y );
-	element_mul_mpz( crs->VK->rvVP[iIOV]->elt, *(crs->VK->P),  y->value);
-	//printf(" wire %d:", crs->VK->rvVP[iIOV]->wire->id);
-	//gmp_printf(" rv*v(s) = %Zd\n", y->value);
-	//element_printf("         rvVP = %B\n", crs->VK->rvVP[iIOV]->elt);
-	//printf (" %d ptr add %p\n", iIOV, crs->VK->rvVP[iIOV]);
+    ptr = this->C->wire[i];
+
+    if ( strcmp(ptr->type,"input")==0 || strcmp(ptr->type,"output")==0 ) {
+
+      if (ptr->left_ctrb->length>0) {
+	this->VK->RvVP[iIOV]->wire = ptr;
+	ptr->V->eval (ptr->V, this->param[3], y0);  // y0 = V(s)
+	y0->field->mulElt (this->param[0], y0, y0); // y0 = Rv * V(s)
+	element_mul_mpz (this->VK->RvVP[iIOV]->elt, *(this->VK->P), y0->value);
+	mpz_set (this->VK->RvVP[iIOV]->value, y0->value);
 	iIOV+=1;
       }
  
-      if (c->wire[i]->right_ctrb->length>0) {
-	crs->VK->rwWQ[iIOW]->wire = c->wire[i];
-	mpz_init( y->value );
-	evaluate_poly( c->wire[i]->W, crs->param[3], y );
-	mul_field_elt( crs->param[1], y, y );
-	element_mul_mpz( crs->VK->rwWQ[iIOW]->elt, *(crs->VK->Q),  y->value);
-	//printf(" wire %d:", crs->VK->rwWQ[iIOW]->wire->id);
-	//gmp_printf(" rw*w(s) = %Zd\n", y->value);
-	//element_printf("         rwWQ = %B\n", crs->VK->rwWQ[iIOW]->elt);
+      if (ptr->right_ctrb->length>0) {
+	this->VK->RwWQ[iIOW]->wire = ptr;
+	ptr->W->eval (ptr->W, this->param[3], y0);  // y0 = W(s)
+	y0->field->mulElt (this->param[1], y0, y0); // y0 = Rw * W(s)
+	element_mul_mpz (this->VK->RwWQ[iIOW]->elt, *(this->VK->Q), y0->value);
+	mpz_set (this->VK->RwWQ[iIOW]->value, y0->value);
 	iIOW+=1;
       }
-      if (c->wire[i]->output_ctrb->length>0) {
-	crs->VK->ryYP[iIOY]->wire = c->wire[i];
-	mpz_init( y->value );
-	evaluate_poly( c->wire[i]->Y, crs->param[3], y );
-	mul_field_elt( crs->param[2], y, y );
-	element_mul_mpz( crs->VK->ryYP[iIOY]->elt, *(crs->VK->P),  y->value);
-	//printf(" wire %d:", crs->VK->ryYP[iIOY]->wire->id);
-	//gmp_printf(" ry*y(s) = %Zd\n", y->value);
-	//element_printf("         ryYP = %B\n", crs->VK->ryYP[iIOY]->elt);
+      if (ptr->output_ctrb->length>0) {
+	this->VK->RyYP[iIOY]->wire = ptr;
+	ptr->Y->eval (ptr->Y, this->param[3], y0);  // y0 = Y(s)
+	y0->field->mulElt (this->param[2], y0, y0); // y0 = Ry * Y(s)
+	element_mul_mpz (this->VK->RyYP[iIOY]->elt, *(this->VK->P), y0->value);
+	mpz_set (this->VK->RyYP[iIOY]->value, y0->value);
 	iIOY+=1;
       }
     }//end if(input/output)
-    
-    else if ( strcmp(c->wire[i]->type,"intermediate")==0 ) {
-      if (c->wire[i]->left_ctrb->length>0) {
-	crs->EK->rvVP[iIntV]->wire = c->wire[i];
-	crs->EK->alpha_vrvVP[iIntV]->wire = c->wire[i];
-	mpz_init( y->value );
-	evaluate_poly( c->wire[i]->V, crs->param[3], y );//y  = v(s)
-	mul_field_elt( crs->param[0], y, y );            //y  = rv * v(s)
-	mul_field_elt( crs->param[7], y, y1 );           //y1 = beta * rv * v(s)
-	element_mul_mpz( crs->EK->rvVP[iIntV]->elt, *(crs->VK->P),  y->value);//y = rv * v(s) * P
-	mul_field_elt( crs->param[4], y, y );            //y  = alpha_v * rv * v(s)
-	element_mul_mpz( crs->EK->alpha_vrvVP[iIntV]->elt, *(crs->VK->P),  y->value);//y = alpha_v * rv * v(s) * P
-	//printf(" wire %d:", crs->EK->rvVP[iIntV]->wire->id);
-	//gmp_printf(" rv*v(s) = %Zd\n", y->value);
-	//element_printf("         rvVP = %B\n", crs->EK->rvVP[iIntV]->elt);
+   
+    else if ( strcmp(ptr->type,"intermediate")==0 ) {
+      
+      if (ptr->left_ctrb->length>0) {
+	this->EK->RvVP[iIntV]->wire = ptr;
+	this->EK->ALPHAvRvVP[iIntV]->wire = ptr;
+
+	ptr->V->eval (ptr->V, this->param[3], y0);  //y0 = V(s)
+	y0->field->mulElt (this->param[0], y0, y0); //y0 = Rv * V(s)
+	y1->field->mulElt (this->param[7], y0, y1); //y1 = BETA * Rv * V(s)
+	element_mul_mpz (this->EK->RvVP[iIntV]->elt, *(this->VK->P), y0->value);
+	mpz_set (this->EK->RvVP[iIntV]->value, y0->value);
+	y0->field->mulElt (this->param[4], y0, y0); //y0 = ALPHAv * Rv * V(s)
+	element_mul_mpz (this->EK->ALPHAvRvVP[iIntV]->elt, *(this->VK->P), y0->value);
+	mpz_set (this->EK->ALPHAvRvVP[iIntV]->value, y0->value);
 	iIntV+=1;
       }
-      if (c->wire[i]->right_ctrb->length>0) {
-	crs->EK->rwWQ[iIntW]->wire = c->wire[i];
-	crs->EK->alpha_wrwWQ[iIntW]->wire = c->wire[i];
-	mpz_init( y->value );
-	evaluate_poly( c->wire[i]->W, crs->param[3], y );//y  = w(s)
-	mul_field_elt( crs->param[1], y, y );            //y  = rw * w(s)
-	mul_field_elt( crs->param[7], y, y2 );           //y2 = beta * rw * w(s)
-	element_mul_mpz( crs->EK->rwWQ[iIntW]->elt, *(crs->VK->Q),  y->value);//y = rw * w(s) * Q
-	mul_field_elt( crs->param[5], y, y );            //y  = alpha_w * rw * w(s)
-	element_mul_mpz( crs->EK->alpha_wrwWQ[iIntW]->elt, *(crs->VK->Q),  y->value);//y = alpha_w * rw * w(s) * Q
-	//printf(" wire %d:", crs->EK->rwWQ[iIntW]->wire->id);
-	//gmp_printf(" rw*w(s) = %Zd\n", y->value);
-	//element_printf("         rwWQ = %B\n", crs->EK->rwWQ[iIntW]->elt);
+      
+      if (ptr->right_ctrb->length>0) {
+	this->EK->RwWQ[iIntW]->wire = ptr;
+	this->EK->ALPHAwRwWQ[iIntW]->wire = ptr;
+	this->EK->ALPHAwRwWP[iIntW]->wire = ptr;
+	
+	ptr->W->eval (ptr->W, this->param[3], y0);  //y0 = W(s)
+	y0->field->mulElt (this->param[1], y0, y0); //y0 = Rw * W(s)
+	y2->field->mulElt (this->param[7], y0, y2); //y2 = BETA * Rw * W(s)
+	element_mul_mpz (this->EK->RwWQ[iIntW]->elt, *(this->VK->Q), y0->value);
+	mpz_set (this->EK->RwWQ[iIntW]->value, y0->value);
+	y0->field->mulElt (this->param[5], y0, y0); //y0 = ALPHAw * Rw * W(s)
+	element_mul_mpz (this->EK->ALPHAwRwWQ[iIntW]->elt, *(this->VK->Q), y0->value);
+	element_mul_mpz (this->EK->ALPHAwRwWP[iIntW]->elt, *(this->VK->P), y0->value);
+	mpz_set (this->EK->ALPHAwRwWQ[iIntW]->value, y0->value);
 	iIntW+=1;
       }
-      if (c->wire[i]->output_ctrb->length>0) {
-	crs->EK->ryYP[iIntY]->wire = c->wire[i];
-	crs->EK->alpha_yryYP[iIntY]->wire = c->wire[i];
-	mpz_init( y->value );
-	evaluate_poly( c->wire[i]->Y, crs->param[3], y );//y  = y(s)
-	mul_field_elt( crs->param[2], y, y );            //y  = ry * y(s)
-	mul_field_elt( crs->param[7], y, y3 );           //y3 = beta * ry * y(s)
-	element_mul_mpz( crs->EK->ryYP[iIntY]->elt, *(crs->VK->P),  y->value);//y = ry * y(s) * P
-	mul_field_elt( crs->param[6], y, y );            //y  = alpha_y * ry * y(s)
-	element_mul_mpz( crs->EK->alpha_yryYP[iIntY]->elt, *(crs->VK->P),  y->value);//y = alpha_y * ry * y(s) * P
-	//printf(" wire %d:", crs->EK->ryYP[iIntY]->wire->id);
-	//gmp_printf(" ry*y(s) = %Zd\n", y->value);
-	//element_printf("         ryYP = %B\n", crs->EK->ryYP[iIntY]->elt);
+      
+      if (ptr->output_ctrb->length>0) {
+	this->EK->RyYP[iIntY]->wire = ptr;
+	this->EK->ALPHAyRyYP[iIntY]->wire = ptr;
+
+	ptr->Y->eval (ptr->Y, this->param[3], y0);  //y0 = Y(s)
+	y0->field->mulElt (this->param[2], y0, y0); //y0 = Ry * Y(s)
+	y3->field->mulElt (this->param[7], y0, y3); //y3 = BETA * Ry * Y(s)
+	element_mul_mpz (this->EK->RyYP[iIntY]->elt, *(this->VK->P), y0->value);
+	mpz_set (this->EK->RyYP[iIntY]->value, y0->value);
+	y0->field->mulElt (this->param[6], y0, y0); //y0 = ALPHAy * Ry * Y(s)
+	element_mul_mpz (this->EK->ALPHAyRyYP[iIntY]->elt, *(this->VK->P), y0->value);
+	mpz_set (this->EK->ALPHAyRyYP[iIntY]->value, y0->value);
 	iIntY+=1;
       }
-      //gmp_printf(" y1 = %Zd y2 = %Zd y3 = %Zd\n", y1->value, y2->value, y3->value);
-      add_field_elt( y1, y2, y1 ); //y1 = ( beta * rv * v(s) ) + ( beta * rw * w(s) )
-      add_field_elt( y1, y3, y1 ); //y1 = ( beta * rv * v(s) ) + ( beta * rw * w(s) ) + ( beta * ry * y(s) )
+
+      // y0 = (BETA * Rv * V(s)) + (BETA * Rw * W(s))
+      y0->field->addElt (y1, y2, y0);
+
+      // y1 = y0 + (BETA * Ry * Y(s))
+      y0->field->addElt (y0, y3, y1);
+
       //gmp_printf(" y1 = %Zd\n", y1->value);
-      element_mul_mpz( crs->EK->r_xbetaVP[iInt]->elt, *(crs->VK->P),  y1->value);//y1 = ( ( beta * rv * v(s) ) + ( beta * rw * w(s) ) + ( beta * ry * y(s) ) ) * P
-      crs->EK->r_xbetaVP[iInt]->wire = c->wire[i];
+      element_mul_mpz (this->EK->RxBETAXP[iInt]->elt, *(this->VK->P),  y1->value);
+      mpz_set (this->EK->RxBETAXP[iInt]->value, y1->value);
+      this->EK->RxBETAXP[iInt]->wire = ptr;
       iInt+=1;
-      mpz_init( y1->value );
-      mpz_init( y2->value );
-      mpz_init( y3->value );
+
+      //mpz_init( y1->value );
+      //mpz_init( y2->value );
+      //mpz_init( y3->value );
+      mpz_set_ui (y1->value, 0);
+      mpz_set_ui (y2->value, 0);
+      mpz_set_ui (y3->value, 0);
     }//end else if(intermediate)
       
     else {
-      printf("wire's type not defined... exiting now");
+      printf ("error in generateRxXY, type not defined... exiting now");
+      exit (0);
+    }
+    
+  }
+
+  y0->free (y0);
+  y1->free (y1);
+  y2->free (y2);
+  y3->free (y3);
+  
+}
+
+//================================
+//================================
+
+void generateTargetPoly (struct poly_t *this, struct circuit_t *C) {
+
+  // temporary variables
+  struct poly_t *tmp_poly1 = malloc (sizeof (struct poly_t) );
+  tmp_poly1->init = initPoly;
+  tmp_poly1->init (tmp_poly1);
+
+  struct poly_t *tmp_poly2 = malloc (sizeof (struct poly_t) );
+  tmp_poly2->init = initPoly;
+  tmp_poly2->init (tmp_poly2);
+  
+  struct field_elt_t *tmp_elt = malloc (sizeof (struct field_elt_t) );
+  tmp_elt->init = initFieldElt;
+  tmp_elt->init (tmp_elt, C->field);
+
+  // T(x) = 1*x^0
+  mpz_set_ui (tmp_elt->value, 1); 
+  this->insertNode (this, tmp_elt->value, 0, tmp_elt->field);
+  
+  int i;
+  for (i=0; i<C->nMul_gate; i++) {
+    mpz_set_ui (tmp_elt->value, 1);
+    
+    // tmp_poly1(x) = 1*x
+    tmp_poly1->insertNode (tmp_poly1, tmp_elt->value, 1, tmp_elt->field);
+
+    // tmp_elt <- (-ri)
+    tmp_elt->field->negElt (C->gate[C->index[i]]->root, tmp_elt);
+
+    // tmp_poly1(x) = 1*x - ri *x^0
+    tmp_poly1->insertNode (tmp_poly1, tmp_elt->value, 0, tmp_elt->field);
+        
+    tmp_poly2->mulPoly (this, tmp_poly1, tmp_poly2);
+    tmp_poly1->reset (tmp_poly1);
+    
+    this->reset (this);
+    this->copyPoly (tmp_poly2, this);
+    tmp_poly2->reset (tmp_poly2);
+  }
+
+  tmp_poly1->free (tmp_poly1);
+  tmp_poly2->free (tmp_poly2);
+  tmp_elt->free (tmp_elt);
+}
+
+//================================
+//================================
+
+void generateQAP (struct crs_t *this) {
+  
+  if (this->C==NULL) {
+    printf("error in generateQAP, circuit does not exist... exiting now!");
+    exit(0);
+  }
+
+  int i;
+  for (i=0; i<this->C->nWire; i++) {
+
+    if (this->C->wire[i]==NULL) {
+      printf("error in generateQAP, wire[%d] does not exist... exiting now!", i);
       exit(0);
     }
     
-  }
-  free_field_elt (y);
-  free_field_elt (y1);
-  free_field_elt (y2);
-  free_field_elt (y3);
+    this->C->wire[i]->V = malloc (sizeof (struct poly_t) );
+    this->C->wire[i]->W = malloc (sizeof (struct poly_t) );
+    this->C->wire[i]->Y = malloc (sizeof (struct poly_t) );
 
+    this->C->wire[i]->V->init = initPoly;
+    this->C->wire[i]->W->init = initPoly;
+    this->C->wire[i]->Y->init = initPoly;
+
+    this->C->wire[i]->V->init (this->C->wire[i]->V);
+    this->C->wire[i]->W->init (this->C->wire[i]->W);
+    this->C->wire[i]->Y->init (this->C->wire[i]->Y);
+    
+    if (this->C->wire[i]->left_ctrb->length>0) {
+      this->genQAPP (this->C->wire[i]->V, this, this->C->wire[i]->left_ctrb->head, this->C->wire[i], this->nIO_V, this->nInt_V);
+    }
+
+    if (this->C->wire[i]->right_ctrb->length>0) {
+      this->genQAPP (this->C->wire[i]->W, this, this->C->wire[i]->right_ctrb->head, this->C->wire[i], this->nIO_W, this->nInt_W);
+    }
+
+     if (this->C->wire[i]->output_ctrb->length>0) {
+      this->genQAPP (this->C->wire[i]->Y, this, this->C->wire[i]->output_ctrb->head, this->C->wire[i], this->nIO_Y, this->nInt_Y);
+    }
+    
+  }// end-loop
 }
 
-//==============================================
-//==============================================
+//================================
+//================================
 
-void free_crs( struct crs_t *crs, struct circuit_t *c  ) {
+void generateQAPPoly (struct poly_t *this, struct crs_t *CRS, struct node_t *node,
+		      struct wire_t *wire, unsigned int *nIO, unsigned int *nInt) {
+  
+  // temporary variables
+  struct poly_t *tmp_poly = malloc (sizeof (struct poly_t) );
+  tmp_poly->init = initPoly;
+  tmp_poly->init (tmp_poly);
+ 
+  struct field_elt_t *tmp_elt = malloc (sizeof (struct field_elt_t) );
+  tmp_elt->init = initFieldElt;
+  tmp_elt->init (tmp_elt, CRS->C->field);
+  mpz_set_ui (tmp_elt->value, 0);
+  
+  this->insertNode (this, tmp_elt->value, 0, tmp_elt->field);
+  
+  while (node!=NULL) {
+    tmp_poly->addPoly (this, node->gate->lagrange_poly, tmp_poly);
+    this->reset (this);
+    this->copyPoly (tmp_poly, this);
+    tmp_poly->reset (tmp_poly);
+    node = node->next;
+  }
 
+  if (strcmp(wire->type,"input")==0 || strcmp(wire->type,"output")==0) {
+    *(nIO)+=1;
+  }
+  else if (strcmp(wire->type,"intermediate")==0) {
+    *(nInt)+=1;
+  }
+  else {
+    printf("error in generateQAPP, type not defined... exiting now");
+    exit(0);
+  }
+  
+  tmp_elt->free (tmp_elt);
+  tmp_poly->free (tmp_poly);
+      
+}
+
+//================================
+//================================
+
+void generateLagrangePoly (struct crs_t *this) {
+  int i, j;
+
+  // temporary variables
+  struct field_elt_t *tmp_elt = malloc (sizeof (struct field_elt_t) );
+  tmp_elt->init = initFieldElt;
+  tmp_elt->init (tmp_elt, this->C->field);
+
+  struct field_elt_t *tmp_den = malloc (sizeof (struct field_elt_t) );
+  tmp_den->init = initFieldElt;
+  tmp_den->init (tmp_den, this->C->field);
+    
+  struct poly_t *tmp_ptr;
+  struct poly_t *tmp_poly1 = malloc (sizeof (struct poly_t) );
+  struct poly_t *tmp_poly2 = malloc (sizeof (struct poly_t) );
+  
+  tmp_poly1->init = initPoly;
+  tmp_poly1->init (tmp_poly1);
+
+  tmp_poly2->init = initPoly;
+  tmp_poly2->init (tmp_poly2);
+  
+  for (i=0; i<this->C->nMul_gate; i++) {
+    this->C->gate[this->C->index[i]]->lagrange_poly = malloc (sizeof (struct poly_t) );
+    this->C->gate[this->C->index[i]]->lagrange_poly->init = initPoly;
+    this->C->gate[this->C->index[i]]->lagrange_poly->init (this->C->gate[this->C->index[i]]->lagrange_poly);
+
+    // temporary pointer
+    tmp_ptr = this->C->gate[this->C->index[i]]->lagrange_poly;
+
+    // tmp_ptr(x) = 1*x^0
+    mpz_set_ui (tmp_elt->value, 1);
+    tmp_ptr->insertNode (tmp_ptr, tmp_elt->value, 0, tmp_elt->field);
+  
+    // tmp_den = 1
+    mpz_set_ui (tmp_den->value, 1);
+    
+    for (j=0; j<this->C->nMul_gate; j++) {  
+
+      if (i!=j) {
+	// tmp_poly1(x) = 1*x^1-rj*x^0
+	mpz_set_ui (tmp_elt->value, 1);
+	tmp_poly1->insertNode (tmp_poly1, tmp_elt->value, 1, tmp_elt->field); //tmp_poly1(x) = 1*x^1
+		
+	tmp_elt->field->negElt (this->C->gate[this->C->index[j]]->root, tmp_elt);
+	tmp_poly1->insertNode (tmp_poly1, tmp_elt->value, 0, tmp_elt->field); //tmp_poly1(x) = 1*x^1 - rj*x^0
+	
+	// tmp_poly2(x) = tmp_poly1(x) * tmp_ptr(x)
+	tmp_poly2->mulPoly (tmp_ptr, tmp_poly1, tmp_poly2);
+	tmp_poly1->reset (tmp_poly1);
+ 
+	// tmp_ptr(x) <- tmp_poly2(x)
+	tmp_ptr->reset (tmp_ptr);
+	tmp_ptr->copyPoly (tmp_poly2, tmp_ptr); 
+	tmp_poly2->reset (tmp_poly2);
+	  
+	// tmp_elt = (ri-rj)
+	tmp_elt->field->subElt
+	  (this->C->gate[this->C->index[i]]->root, this->C->gate[this->C->index[j]]->root, tmp_elt);
+
+	// tmp_den *= tmp_elt
+	tmp_den->field->mulElt (tmp_elt, tmp_den, tmp_den); 	
+	
+      }    
+    } // end-for
+    
+    // tmp_den <- 1/tmp_den
+    tmp_elt->field->invElt (tmp_den, tmp_den);
+
+    // tmp_poly1(x) = tmp_ptr(x) * tmp_den
+    tmp_ptr->cstMulPoly (tmp_ptr, tmp_den, tmp_poly1);
+    tmp_ptr->reset (tmp_ptr);
+    tmp_ptr->copyPoly (tmp_poly1, tmp_ptr); 
+    tmp_poly1->reset (tmp_poly1);
+
+  } // end-for
+
+  tmp_elt->free (tmp_elt);
+  tmp_den->free (tmp_den);
+  
+  tmp_poly1->free (tmp_poly1);
+  tmp_poly2->free (tmp_poly2);
+}
+
+//================================
+//================================
+
+void freeCRS (struct crs_t *this) {
   int i;
 
-  printf (" freeing param\n");
-  if (crs->param!=NULL) {
-    for (i=0; i<NPARAMS; i++) {
-      if (crs->param[i]!=NULL) {
-	free_field_elt (crs->param[i]);
+  if (this!=NULL) {
+
+    // param
+    if (this->param!=NULL) {
+      for (i=0; i<NPARAMS; i++) {
+	if (this->param[i]!=NULL) {
+	  this->param[i]->free (this->param[i]);
+	}
       }
+      free (this->param);
     }
-    free (crs->param);
+    
+    // EKey
+    if (this->EK!=NULL) {
+
+      for (i=0; i<*(this->nInt_V); i++) {
+	if (this->EK->RvVP[i]!=NULL) {
+	  mpz_clear (this->EK->RvVP[i]->value);
+	  element_clear (this->EK->RvVP[i]->elt);
+	  free (this->EK->RvVP[i]);
+	}
+	if (this->EK->ALPHAvRvVP[i]!=NULL) {
+	  mpz_clear (this->EK->ALPHAvRvVP[i]->value);
+	  element_clear (this->EK->ALPHAvRvVP[i]->elt);
+	  free (this->EK->ALPHAvRvVP[i]);
+	}
+      }
+      free (this->EK->RvVP);
+      free (this->EK->ALPHAvRvVP);
+      
+      for (i=0; i<*(this->nInt_W); i++) {
+	if (this->EK->RwWQ[i]!=NULL) {
+	  mpz_clear (this->EK->RwWQ[i]->value);
+	  element_clear (this->EK->RwWQ[i]->elt);
+	  free (this->EK->RwWQ[i]);
+	}
+	if (this->EK->ALPHAwRwWQ[i]!=NULL) {
+	  mpz_clear (this->EK->ALPHAwRwWQ[i]->value);
+	  element_clear (this->EK->ALPHAwRwWQ[i]->elt);
+	  free (this->EK->ALPHAwRwWQ[i]);
+	}
+	if (this->EK->ALPHAwRwWP[i]!=NULL) {
+	  mpz_clear (this->EK->ALPHAwRwWP[i]->value);
+	  element_clear (this->EK->ALPHAwRwWP[i]->elt);
+	  free (this->EK->ALPHAwRwWP[i]);
+	}
+      }
+      free (this->EK->RwWQ);
+      free (this->EK->ALPHAwRwWQ);
+      free (this->EK->ALPHAwRwWP);
+      
+      for (i=0; i<*(this->nInt_Y); i++) {
+	if (this->EK->RyYP[i]!=NULL) {
+	  mpz_clear (this->EK->RyYP[i]->value);
+	  element_clear (this->EK->RyYP[i]->elt);
+	  free (this->EK->RyYP[i]);
+	}
+	if (this->EK->RyYP[i]!=NULL) {
+	  mpz_clear (this->EK->ALPHAyRyYP[i]->value);
+	  element_clear (this->EK->ALPHAyRyYP[i]->elt);
+	  free (this->EK->ALPHAyRyYP[i]);
+	}
+      }
+      free (this->EK->RyYP);
+      free (this->EK->ALPHAyRyYP);
+	
+      for (i=0; i<(this->C->nWire - this->C->nIOWire); i++) {
+	if (this->EK->RxBETAXP[i]!=NULL) {
+	  mpz_clear (this->EK->RxBETAXP[i]->value);
+	  element_clear (this->EK->RxBETAXP[i]->elt);
+	  free (this->EK->RxBETAXP[i]);
+	}
+      }
+      free (this->EK->RxBETAXP);
+      
+      for (i=0; i<=(int)(this->T->hiExp (this->T)); i++) {
+	mpz_clear (this->EK->SQ[i]->value);
+	element_clear (this->EK->SQ[i]->elt);
+	free (this->EK->SQ[i]);
+      }
+      free (this->EK->SQ);
+      
+      free (this->EK);
+    }
+
+    // VKey
+    if (this->VK!=NULL) {
+
+      element_clear (this->VK->ALPHAvQ);
+      element_clear (this->VK->ALPHAwQ);
+      element_clear (this->VK->ALPHAwP);
+      element_clear (this->VK->ALPHAyQ);
+      element_clear (this->VK->BETAP);
+      element_clear (this->VK->BETAQ);
+      element_clear (this->VK->RyTP);
+      
+      for (i=0; i<*(this->nIO_V); i++) {
+	if (this->VK->RvVP[i]!=NULL) {
+	  mpz_clear (this->VK->RvVP[i]->value);
+	  element_clear (this->VK->RvVP[i]->elt);
+	  free (this->VK->RvVP[i]);
+	}
+      }
+      free (this->VK->RvVP);
+      
+      for (i=0; i<*(this->nIO_W); i++) {
+	if (this->VK->RwWQ[i]!=NULL) {
+	  mpz_clear (this->VK->RwWQ[i]->value);
+	  element_clear (this->VK->RwWQ[i]->elt);
+	  free (this->VK->RwWQ[i]);
+	}
+      }
+      free (this->VK->RwWQ);
+      	
+      for (i=0; i<*(this->nIO_Y); i++) {
+	if (this->VK->RyYP[i]!=NULL) {
+	  mpz_clear (this->VK->RyYP[i]->value);
+	  element_clear (this->VK->RyYP[i]->elt);
+	  free (this->VK->RyYP[i]);
+	}
+      }
+      free (this->VK->RyYP);
+       
+      free (this->VK);
+    }
+       
+    // T(x)
+    if (this->T!=NULL) {
+      this->T->free (this->T);
+    }
+    
+    // nIO_V
+    if (this->nIO_V!=NULL) {
+      free (this->nIO_V);
+    }
+
+    // nIO_W
+    if (this->nIO_W!=NULL) {
+      free (this->nIO_W);
+    }
+
+    // nIO_Y
+    if (this->nIO_Y!=NULL) {
+      free (this->nIO_Y);
+    }
+
+    // nInt_V
+    if (this->nInt_V!=NULL) {
+      free (this->nInt_V);
+    }
+
+    // nInt_W
+    if (this->nInt_W!=NULL) {
+      free (this->nInt_W);
+    }
+
+    // nInt_Y
+    if (this->nInt_Y!=NULL) {
+      free (this->nInt_Y);
+    }
+    
+    free (this);
+  }
+}
+
+//================================
+//================================
+
+void viewCRS (struct crs_t *this) {
+  int i;
+  printf ("\n");
+  printf (" **** CRS ****\n");
+  
+  for (i=0; i<NPARAMS; i++) {
+    gmp_printf(" param[%d]: %Zd\n", i, this->param[i]->value);
+  }
+
+  printf("\n --- Lagrange polynomial ---\n");
+  for (i=0; i<this->C->nMul_gate; i++) {
+    gmp_printf(" Gate %Zd: L(x) =", this->C->gate[this->C->index[i]]->root->value);
+    this->C->gate[this->C->index[i]]->lagrange_poly->view
+      (this->C->gate[this->C->index[i]]->lagrange_poly);
+  }
+
+  printf("\n --- Wire ctrb ---\n");
+  for (i=0; i<this->C->nWire; i++) {
+    this->C->wire[i]->viewCtrb (this->C->wire[i]);
+  }
+
+  printf("\n --- Target polynomial ---\n");
+  printf (" T(x) =");
+  this->T->view (this->T);
+
+  printf("\n --- VKey ---\n");
+  
+  element_printf(" P = %B\n", this->VK->P);
+  element_printf(" Q = %B\n", this->VK->Q); 
+  element_printf(" ALPHAvQ = %B\n", this->VK->ALPHAvQ);
+  element_printf(" ALPHAwQ = %B\n", this->VK->ALPHAwQ);
+  element_printf(" ALPHAwP = %B\n", this->VK->ALPHAwP);
+  element_printf(" ALPHAyQ = %B\n", this->VK->ALPHAyQ);
+  element_printf(" BETAP   = %B\n", this->VK->BETAP);
+  element_printf(" BETAQ   = %B\n", this->VK->BETAQ);
+  element_printf(" RyTP    = %B\n", this->VK->RyTP);
+
+  for (i=0; i<*(this->nIO_V); i++) {
+    //gmp_printf(" RvV (%d) = %Zd\n", this->VK->RvVP[i]->wire->id, this->VK->RvVP[i]->value);
+    element_printf(" RvVP(%d) = %B\n", this->VK->RvVP[i]->wire->id, this->VK->RvVP[i]->elt);
   }
   
-  /* EK */
-  printf (" freeing EK\n");
-  if (crs->EK!=NULL) {
-
-    for (i=0; i<*(crs->nInt_V); i++) {
-      if (crs->EK->rvVP[i]!=NULL) {
-	element_clear( crs->EK->rvVP[i]->elt );
-	free (crs->EK->rvVP[i]->wire);
-	free (crs->EK->rvVP[i]);
-      }
-    }
-    free (crs->EK->rvVP);
-
-    for (i=0; i<*(crs->nInt_W); i++) {
-      if (crs->EK->rwWQ[i]!=NULL) {
-	element_clear( crs->EK->rwWQ[i]->elt );
-	free (crs->EK->rwWQ[i]->wire);
-	free (crs->EK->rwWQ[i]);
-      }
-    }
-    free (crs->EK->rwWQ);
-
-    for (i=0; i<*(crs->nInt_Y); i++) {
-      if (crs->EK->ryYP[i]!=NULL) {
-	element_clear( crs->EK->ryYP[i]->elt );
-	free (crs->EK->ryYP[i]->wire);
-	free (crs->EK->ryYP[i]);
-      }
-    }
-    free (crs->EK->ryYP);
-
-    for (i=0; i<*(crs->nInt_V); i++) {
-      if (crs->EK->alpha_vrvVP[i]!=NULL) {
-	element_clear( crs->EK->alpha_vrvVP[i]->elt );
-	free (crs->EK->alpha_vrvVP[i]->wire);
-	free (crs->EK->alpha_vrvVP[i]);
-	crs->EK->alpha_vrvVP[i]->wire=NULL;
-	crs->EK->alpha_vrvVP[i]=NULL;
-      }
-    }
-    free (crs->EK->alpha_vrvVP);
-
-     for (i=0; i<*(crs->nInt_W); i++) {
-      if (crs->EK->alpha_wrwWQ[i]!=NULL) {
-	element_clear( crs->EK->alpha_wrwWQ[i]->elt );
-	free (crs->EK->alpha_wrwWQ[i]->wire);
-	free (crs->EK->alpha_wrwWQ[i]);
-      }
-    }
-    free (crs->EK->alpha_wrwWQ);
-
-    for (i=0; i<*(crs->nInt_Y); i++) {
-      if (crs->EK->alpha_yryYP[i]!=NULL) {
-	element_clear( crs->EK->alpha_yryYP[i]->elt );
-	free (crs->EK->alpha_yryYP[i]->wire);
-	free (crs->EK->alpha_yryYP[i]);
-      }
-    }
-    free (crs->EK->ryYP);
-
-    for (i=0; i<(c->nWire-c->nIOWire); i++) {
-      if (crs->EK->r_xbetaVP[i]!=NULL) {
-	element_clear( crs->EK->r_xbetaVP[i]->elt );
-	//free (crs->EK->r_xbetaVP[i]->wire);
-	free (crs->EK->r_xbetaVP[i]);
-      }
-    }
-    free (crs->EK->r_xbetaVP);
-        
-    free (crs->EK);
-  }
-
-  /* VK */
-  printf (" freeing VK\n");
-  if (crs->VK!=NULL) {
-
-    element_clear( crs->VK->alpha_vQ );
-    element_clear( crs->VK->alpha_wQ );
-    element_clear( crs->VK->alpha_wP );
-    element_clear( crs->VK->alpha_yQ );
-    element_clear( crs->VK->betaP );
-    element_clear( crs->VK->betaQ );
-    element_clear( crs->VK->rytP  );
-    
-    for (i=0; i<*(crs->nIO_V); i++) {
-      if (crs->VK->rvVP[i]!=NULL) {
-	element_clear( crs->VK->rvVP[i]->elt );
-	free (crs->VK->rvVP[i]->wire);
-	free (crs->VK->rvVP[i]);
-      }
-    }
-    free (crs->VK->rvVP);
-    
-    for (i=0; i<*(crs->nIO_W); i++) {
-      if (crs->VK->rwWQ[i]!=NULL) {
-	element_clear( crs->VK->rwWQ[i]->elt );
-	free (crs->VK->rwWQ[i]->wire);
-	free (crs->VK->rwWQ[i]);
-      }
-    }
-    free (crs->VK->rwWQ);
-
-    for (i=0; i<*(crs->nIO_Y); i++) {
-      if (crs->VK->ryYP[i]!=NULL) {
-	element_clear( crs->VK->ryYP[i]->elt );
-	free (crs->VK->ryYP[i]->wire);
-	free (crs->VK->ryYP[i]);
-      }
-    }
-    free (crs->VK->ryYP);
-    
-    free (crs->VK);
-  }
-
-  printf (" freeing nIO_X\n");
-  if (crs->nIO_V!=NULL) {
-    free (crs->nIO_V);
-  }
-
-  if (crs->nIO_W!=NULL) {
-    free (crs->nIO_W);
-  }
-
-  if (crs->nIO_Y!=NULL) {
-    free (crs->nIO_Y);
-  }
-
-  printf (" freeing nIint_X\n");
-  if (crs->nInt_V!=NULL) {
-    free (crs->nInt_V);
+  for (i=0; i<*(this->nIO_W); i++) {
+    //gmp_printf(" RwW (%d) = %Zd\n", this->VK->RwWQ[i]->wire->id, this->VK->RwWQ[i]->value);
+    element_printf(" RwWQ(%d) = %B\n", this->VK->RwWQ[i]->wire->id, this->VK->RwWQ[i]->elt);
   }
   
-  if (crs->nInt_W!=NULL) {
-    free (crs->nInt_W);
+  for (i=0; i<*(this->nIO_Y); i++) {
+    //gmp_printf(" RyY (%d) = %Zd\n", this->VK->RyYP[i]->wire->id, this->VK->RyYP[i]->value);
+    element_printf(" RyYP(%d) = %B\n", this->VK->RyYP[i]->wire->id, this->VK->RyYP[i]->elt);
+  }
+
+  printf("\n --- EKey ---\n");
+
+  for (i=0; i<*(this->nInt_V); i++) {
+    //gmp_printf(" RvV (%d) = %Zd\n", this->EK->RvVP[i]->wire->id, this->EK->RvVP[i]->value);
+    element_printf(" RvVP(%d) = %B\n", this->EK->RvVP[i]->wire->id, this->EK->RvVP[i]->elt);
+    //gmp_printf(" ALPHAvRvV (%d) = %Zd\n", this->EK->ALPHAvRvVP[i]->wire->id, this->EK->ALPHAvRvVP[i]->value);
+    element_printf(" ALPHAvRvVP(%d) = %B\n", this->EK->ALPHAvRvVP[i]->wire->id, this->EK->ALPHAvRvVP[i]->elt);
   }
   
-  if (crs->nInt_Y!=NULL) {
-    free (crs->nInt_Y);
+  for (i=0; i<*(this->nInt_W); i++) {
+    //gmp_printf(" RwW (%d) = %Zd\n", this->EK->RwWQ[i]->wire->id, this->EK->RwWQ[i]->value);
+    element_printf(" RwWQ(%d) = %B\n", this->EK->RwWQ[i]->wire->id, this->EK->RwWQ[i]->elt);
+    //gmp_printf(" ALPHAwRwW (%d) = %Zd\n", this->EK->ALPHAwRwWQ[i]->wire->id, this->EK->ALPHAwRwWQ[i]->value);
+    element_printf(" ALPHAwRwWQ(%d) = %B\n", this->EK->ALPHAwRwWQ[i]->wire->id, this->EK->ALPHAwRwWQ[i]->elt);
+    element_printf(" ALPHAwRwWP(%d) = %B\n", this->EK->ALPHAwRwWP[i]->wire->id, this->EK->ALPHAwRwWP[i]->elt);
   }
-   
-  free (crs);
+  
+  for (i=0; i<*(this->nInt_Y); i++) {
+    //gmp_printf(" RyY (%d) = %Zd\n", this->EK->RyYP[i]->wire->id, this->EK->RyYP[i]->value);
+    element_printf(" RyYP(%d) = %B\n", this->EK->RyYP[i]->wire->id, this->EK->RyYP[i]->elt);
+    //gmp_printf(" ALPHAyRyY (%d) = %Zd\n", this->EK->ALPHAyRyYP[i]->wire->id, this->EK->ALPHAyRyYP[i]->value);
+    element_printf(" ALPHAyRyYP(%d) = %B\n", this->EK->ALPHAyRyYP[i]->wire->id, this->EK->ALPHAyRyYP[i]->elt);
+  }
+
+  for (i=0; i<(this->C->nWire - this->C->nIOWire); i++) {
+    //gmp_printf(" ( RvBETAV(%d) + RwBETAW(%d) + RyBETAY(%d) )     = %Zd\n",
+    //this->EK->RxBETAXP[i]->wire->id, this->EK->RxBETAXP[i]->wire->id, this->EK->RxBETAXP[i]->wire->id, this->EK->RxBETAXP[i]->value);
+    element_printf(" ( RvBETAV(%d) + RwBETAW(%d) + RyBETAY(%d) ) * P = %B\n",
+		   this->EK->RxBETAXP[i]->wire->id, this->EK->RxBETAXP[i]->wire->id, this->EK->RxBETAXP[i]->wire->id, this->EK->RxBETAXP[i]->elt);
+  }
+
+  for (i=0; i<=(int)(this->T->hiExp (this->T)); i++) {
+    //gmp_printf(" s%d  = %Zd\n", i, this->EK->SQ[i]->value);
+    element_printf(" s%dQ = %B\n", i, this->EK->SQ[i]->elt);
+  }
   
 }
+
+//================================
+//================================
