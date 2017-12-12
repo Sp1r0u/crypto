@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <math.h>
 #include <string.h>
-//#include <stdbool.h>
-//#include <gmp.h>
 
 #include "BN.h"
 
@@ -13,7 +10,7 @@ void init_curve( struct curve_t *c ) {
   mpz_init( c->tx );
   mpz_init( c->nx );
   mpz_init( c->px );
-
+  
   mpz_set_str( c->x, "1", 10 );
   mpz_neg( c->x, c->x );
 
@@ -56,8 +53,12 @@ void init_curve( struct curve_t *c ) {
   pbc_param_init_set_str(c->pbc_params, str1);
 
   FILE *fp = fopen("pbc_params.txt", "w");
-  if( fp == NULL ){ printf("error while opening file... exiting now\n"); exit(1); }
-  
+
+  if (fp==NULL) {
+    printf("error while opening file... exiting now\n");
+    exit(1);
+  }
+    
   pbc_param_out_str( fp, c->pbc_params );
 
   pairing_init_pbc_param( c->pairing, c->pbc_params );
@@ -82,10 +83,11 @@ void init_curve( struct curve_t *c ) {
   element_printf("P = %B\n", c->P);
   element_printf("Q = %B\n", c->Q);
 
+  // read pbc_pairing.h L18
   mpz_init( c->r );
   mpz_set( c->r, c->pairing->r );
   gmp_printf("r = %Zd\n", c->r);
-
+  
   // call mpz_probab_prime_p to check whether r is prime
   // reps=2 if n is definitely prime 
   // reps=1 if n is probably prime (without being certain)
@@ -103,6 +105,29 @@ void init_curve( struct curve_t *c ) {
     printf("Sanety check: G1, G2, GT order are NOT prime,... exiting now\n");
     exit(1);
   }
+  
   fclose( fp );
+
+}
+
+//==============================================
+//==============================================
+
+void free_curve( struct curve_t *c ) {
+
+  mpz_clear (c->x);
+  mpz_clear (c->tx);
+  mpz_clear (c->nx);
+  mpz_clear (c->px);
+  mpz_clear (c->r);
+
+  element_clear (c->P);
+  element_clear (c->Q);
+
+  pbc_param_clear (c->pbc_params);
+
+  pairing_clear (c->pairing);  
+    
+  free( c );
 
 }

@@ -1,0 +1,1 @@
+valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --verbose --num-callers=20 --track-fds=yes --track-origins=yes --log-file="valgrind.log" ./zkSNARK mycircuit_5.txt

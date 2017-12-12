@@ -23,9 +23,9 @@ struct circuit_t {
 
 void init_circuit( struct circuit_t*, struct field_t*, FILE*, gmp_randstate_t );
 
-void new_gate( unsigned int*, unsigned int*, unsigned int, char[], struct circuit_t*, char[], struct field_t*, gmp_randstate_t );
+void new_gate( unsigned int*, unsigned int*, unsigned int, char[], char[], struct circuit_t*, struct field_t*, gmp_randstate_t );
 
-void new_wire( unsigned int*, char[], struct circuit_t*, char[] );
+void new_wire( unsigned int*, char[], char[], struct circuit_t*, struct field_t* );
 
 void print_wire( struct wire_t* );
 
@@ -33,10 +33,12 @@ void print_gate( struct gate_t*);
 
 void display_circuit( struct circuit_t* );
 
-void display_mul_gate( struct circuit_t* ); //show a subset of the circuit, i.e. mult. gates only 
+void display_mul_gate( struct gate_t* ); //show a subset of the circuit, i.e. mult. gates only 
 
-void set_random_input_values( struct circuit_t*, struct field_t*, gmp_randstate_t );
+void set_random_input_values( struct circuit_t*, gmp_randstate_t );
 
 void eval_circuit( struct circuit_t* );
+
+void free_circuit( struct circuit_t* );
 
 #endif /* _CIRCUIT_H_ */

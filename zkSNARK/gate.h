@@ -8,15 +8,17 @@
 
 struct gate_t {
   char *type; //type: add, mul, etc.. gate
-  mpz_t label; //random non-zero element of Fp
   unsigned int ninput; //number of inputs
   unsigned int noutput; //number of outputs
+  struct field_elt_t *root; //random non-zero element of Fp
+  struct poly_ring_t *lagrange_poly; //univariate polynomial ring  
   struct wire_t *linput; //left input wire
   struct wire_t *rinput; //right input wire
   struct wire_t *output; //output wire
-  struct field_t *field;
 };
 
 void eval_gate( struct gate_t* );
+
+void free_gate( struct gate_t* );
 
 #endif /* _GATE_H_ */
