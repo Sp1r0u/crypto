@@ -1,5 +1,5 @@
-#ifndef _ELEMENT_HPP_
-#define _ELEMENT_HPP_
+#ifndef ELEMENT_HPP
+#define ELEMENT_HPP
 
 #include <gmp.h> 
 
@@ -9,12 +9,13 @@ class CElement {
   
 public:
   void getFieldCharacteristic (mpz_t);
-
+  void setRndElement (class CElement*, gmp_randstate_t);
+  
   void setValue (mpz_t);
   void getValue (mpz_t); 
   
   CElement ();
-  CElement (CField*);
+  CElement (class CField*);
   ~CElement ();
 
 private:

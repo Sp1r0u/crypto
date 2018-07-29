@@ -1,5 +1,5 @@
-#ifndef _FIELD_HPP_
-#define _FIELD_HPP_
+#ifndef FIELD_HPP
+#define FIELD_HPP
 
 #include <iostream>
 #include <gmp.h>
@@ -16,7 +16,7 @@ public:
   void setIrreduciblePoly     ();
   void getIrreduciblePoly     ();
 
-  void getRndElement (CElement*, gmp_randstate_t);
+  void getRndElement (class CElement*, gmp_randstate_t);
   
   CField ();
   CField (struct config_t);

@@ -25,15 +25,16 @@ void CField::getCharacteristic (mpz_t out) {
 
 //========================================================
 
-void CField::getRndElement (CElement* elt, gmp_randstate_t state) {
+void CField::getRndElement (CElement* ptr, gmp_randstate_t state) {
   mpz_t p, value;
-  elt->getFieldCharacteristic (p);
-  elt->getValue (value);
+  ptr->getFieldCharacteristic (p);
+  ptr->getValue (value);
   while (mpz_cmp_ui (value, 0)==0) {
     mpz_urandomm (value, state, p);
   }
 
-  elt->setValue (value);
+  gmp_printf ("getRndElemt %Zd\n", value);
+  ptr->setValue (value);
   
   mpz_clear (p);
   mpz_clear (value);

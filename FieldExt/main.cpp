@@ -4,7 +4,6 @@
 #include <inttypes.h>
 #include <vector>
 #include <string>
-//#include <gmp.h>
 #include <time.h>
 
 #include <boost/program_options.hpp>
@@ -19,7 +18,6 @@
 
 int main (int argc, char* argv[]) {
 
-  //struct config_t* cfg = (struct config_t*) malloc (sizeof (struct config_t) );
   config_t cfg;
 
   namespace po = boost::program_options;
@@ -28,7 +26,6 @@ int main (int argc, char* argv[]) {
 
   desc.add_options ()
     ("*FIELD_CHARACTERISTIC", po::value<std::string>(&cfg.p));
-    //("*FIELD_CHARACTERISTIC", po::value<std::string>(&cfg->p));
     
   po::variables_map vm;
 
@@ -52,6 +49,11 @@ int main (int argc, char* argv[]) {
   std::cout << " address Fp " << &Fp << std::endl;
   
   CElement elt (&Fp);
+  elt.setRndElement (&elt, RND_STATE);
+  mpz_t echo;
+  elt.getValue (echo);
+  gmp_printf ("echo %Zd\n", echo);
+  mpz_clear (echo);
   mpz_t dummy;
   elt.getFieldCharacteristic (dummy);
   gmp_printf ("dummy %Zd\n", dummy);
@@ -61,8 +63,6 @@ int main (int argc, char* argv[]) {
   Fp.getCharacteristic (foo);
   gmp_printf(" foo %Zd\n", foo);
   mpz_clear (foo);
-  
-  //free (cfg);
   
   return (EXIT_SUCCESS);
   

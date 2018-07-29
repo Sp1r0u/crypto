@@ -1,5 +1,12 @@
 #include "element.hpp"
 
+void CElement::setRndElement (CElement* ptr, gmp_randstate_t state) {
+  if (ptr)
+    field->getRndElement (ptr, state);
+}
+
+//========================================================
+
 void CElement::getFieldCharacteristic (mpz_t out) {
   field->getCharacteristic (out);
 }
