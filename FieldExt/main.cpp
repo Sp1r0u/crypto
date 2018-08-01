@@ -46,8 +46,35 @@ int main (int argc, char* argv[]) {
   
   CField Fp (cfg); 
 
-  std::cout << " address Fp " << &Fp << std::endl;
+  /**************** test here *******************/
+  uint16_t i;
+  uint16_t deg = 2;
   
+  std::pair<uint16_t, mpz_t>             mypair[deg+1];
+  std::list <std::pair<uint16_t, mpz_t>> foo;
+  
+  for (i=0; i<=deg; i++) {
+
+    mypair[i].first  = i;
+
+    mpz_init (mypair[i].second);
+    mpz_set_ui (mypair[i].second, 999-i);
+
+    foo.push_front (mypair[i]);
+  }
+
+  for (i=0; i<=deg; i++) {
+    mpz_clear (mypair[i].second);
+  }
+  
+  /**************** test here *******************/
+
+  
+  //Fp.buildIrreduciblePoly (2, RND_STATE);
+  
+  //std::cout << " address Fp " << &Fp << std::endl;
+  
+  /*
   CElement elt (&Fp);
   elt.setRndElement (&elt, RND_STATE);
   mpz_t echo;
@@ -63,6 +90,9 @@ int main (int argc, char* argv[]) {
   Fp.getCharacteristic (foo);
   gmp_printf(" foo %Zd\n", foo);
   mpz_clear (foo);
+  */
+
+  gmp_randclear (RND_STATE);
   
   return (EXIT_SUCCESS);
   
